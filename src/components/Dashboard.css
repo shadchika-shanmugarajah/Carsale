@@ -1,0 +1,1411 @@
+.dashboard {
+  padding: 2rem 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  border-radius: 0;
+}
+
+/* Metrics Grid */
+.metrics-grid {
+  margin-bottom: 2rem;
+}
+
+.metric-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 2rem;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  border-left: 5px solid transparent;
+}
+
+.metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  transform: translate(40%, -40%);
+  z-index: 0;
+}
+
+.metric-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+
+.metric-icon {
+  font-size: 3rem;
+  width: 70px;
+  height: 70px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;
+  z-index: 1;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.metric-icon.revenue,
+.metric-icon.assets {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-left-color: #667eea;
+}
+
+.metric-icon.deposits {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.metric-icon.pending-payments,
+.metric-icon.profit {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.metric-icon.reservations,
+.metric-icon.completed {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.metric-icon.pending {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.metric-card.revenue {
+  border-left-color: #667eea;
+}
+
+.metric-card.deposits {
+  border-left-color: #f5576c;
+}
+
+.metric-card.pending-payments {
+  border-left-color: #00f2fe;
+}
+
+.metric-card.reservations {
+  border-left-color: #38f9d7;
+}
+
+.metric-info {
+  flex: 1;
+  z-index: 1;
+}
+
+.metric-info h3,
+.metric-value {
+  margin: 0;
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #2c3e50;
+  line-height: 1.2;
+}
+
+.metric-info p,
+.metric-label {
+  margin: 8px 0 0 0;
+  color: #7f8c8d;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Dashboard Tabs */
+.dashboard-tabs {
+  background: white;
+  border-radius: 12px;
+  padding: 8px;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  overflow-x: auto;
+}
+
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 24px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #7f8c8d;
+  white-space: nowrap;
+  position: relative;
+}
+
+.tab-btn:hover {
+  background: #f8f9fa;
+  color: #2c3e50;
+  transform: translateY(-1px);
+}
+
+.tab-btn.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Tab Content */
+.tab-content {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Order List */
+.order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.order-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.order-item:hover {
+  background: #e9ecef;
+  transform: translateX(5px);
+}
+
+.order-details h4 {
+  margin: 0 0 0.25rem 0;
+  color: #2c3e50;
+}
+
+.order-details p {
+  margin: 0;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.order-status {
+  text-align: right;
+}
+
+.order-cost {
+  margin: 0.5rem 0 0 0;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+/* Table Styles */
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.table-header h3 {
+  margin: 0;
+  color: #2c3e50;
+}
+
+/* Expense Categories */
+.expense-categories {
+  margin-top: 1.5rem;
+}
+
+.expense-item {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.expense-item:hover {
+  background: #e9ecef;
+  transform: translateY(-2px);
+}
+
+.expense-item h4 {
+  margin: 0 0 0.5rem 0;
+  color: #495057;
+  font-size: 1rem;
+}
+
+.expense-amount {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #667eea;
+}
+
+/* Document Tracking */
+.document-tracking, .payment-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.doc-item, .payment-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.doc-label, .payment-label {
+  font-weight: 600;
+  color: #495057;
+}
+
+.doc-value, .payment-method {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+/* Report Styles */
+.report-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.report-item {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.report-item:hover {
+  background: #e9ecef;
+}
+
+.report-item h4 {
+  margin: 0 0 0.75rem 0;
+  color: #2c3e50;
+}
+
+.report-item p {
+  margin: 0.25rem 0;
+  color: #6c757d;
+}
+
+/* Analytics */
+.analytics {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.analytics-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.analytics-label {
+  color: #495057;
+  font-weight: 500;
+}
+
+.analytics-value {
+  font-weight: 700;
+  color: #667eea;
+  font-size: 1.1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 1rem 0;
+  }
+  
+  .metrics-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+  
+  .metric-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 1rem;
+  }
+  
+  .metric-icon {
+    font-size: 2rem;
+    width: 50px;
+    height: 50px;
+  }
+  
+  .dashboard-tabs {
+    padding: 0 1rem;
+  }
+  
+  .tab-btn {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+  }
+  
+  .table-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .order-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .order-status {
+    text-align: left;
+    width: 100%;
+  }
+  
+  .action-buttons {
+    gap: 0.75rem;
+  }
+  
+  .doc-item, .payment-item, .analytics-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
+
+/* Orders Management Styles */
+.orders-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.orders-header h3 {
+  margin: 0;
+  color: #2c3e50;
+}
+
+.orders-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.search-filter-group {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.search-input {
+  padding: 0.5rem 1rem;
+  border: 2px solid #e9ecef;
+  border-radius: 25px;
+  min-width: 200px;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.status-filter {
+  padding: 0.5rem 1rem;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  background: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.status-filter:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Orders Table Enhancements */
+.orders-table-container {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+}
+
+.orders-table {
+  margin: 0;
+}
+
+.orders-table th {
+  background: linear-gradient(135deg, #667eea15, #764ba215);
+  color: #495057;
+  font-weight: 700;
+  padding: 1rem 0.75rem;
+  white-space: nowrap;
+}
+
+.orders-table td {
+  padding: 1rem 0.75rem;
+  vertical-align: middle;
+}
+
+.vehicle-info strong {
+  display: block;
+  color: #2c3e50;
+}
+
+.vehicle-info small {
+  color: #6c757d;
+}
+
+.country-flag {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+.status-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.status-update-select {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  background: white;
+  cursor: pointer;
+}
+
+.cost-display strong {
+  display: block;
+  color: #2c3e50;
+  font-size: 1.1rem;
+}
+
+.selling-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.selling-price {
+  color: #6f42c1;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.profit-indicator {
+  color: #28a745;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.action-buttons-cell {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.action-buttons-cell .btn {
+  padding: 0.5rem;
+  min-width: 35px;
+  font-size: 0.9rem;
+}
+
+.btn-info {
+  background: #17a2b8;
+  color: white;
+}
+
+.btn-info:hover {
+  background: #138496;
+}
+
+.btn-danger {
+  background: #dc3545;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #c82333;
+}
+
+/* No Orders State */
+.no-orders {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: #6c757d;
+}
+
+.no-orders h4 {
+  color: #495057;
+  margin-bottom: 1rem;
+}
+
+.no-orders p {
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+}
+
+/* Additional Metric Icons */
+.metric-icon.orders {
+  background: linear-gradient(135deg, #17a2b8, #138496);
+}
+
+.metric-icon.in-transit {
+  background: linear-gradient(135deg, #ffc107, #e0a800);
+}
+
+.metric-icon.clearing {
+  background: linear-gradient(135deg, #6f42c1, #5a32a3);
+}
+
+.metric-icon.total-value {
+  background: linear-gradient(135deg, #e83e8c, #d91a72);
+}
+
+/* Order Details Modal */
+.order-details-modal {
+  max-width: 800px;
+}
+
+.order-details-content {
+  padding: 2rem;
+}
+
+.detail-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.detail-section {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.detail-section h3 {
+  margin: 0 0 1rem 0;
+  color: #2c3e50;
+  border-bottom: 2px solid #667eea;
+  padding-bottom: 0.5rem;
+  display: inline-block;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.detail-item label {
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.9rem;
+}
+
+.detail-item span {
+  color: #2c3e50;
+  font-size: 1rem;
+}
+
+.expense-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.expense-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.expense-item.total-cost {
+  background: #667eea10;
+  border-color: #667eea;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+.expense-item.profit {
+  background: #28a74510;
+  border-color: #28a745;
+  margin-top: 0.5rem;
+}
+
+.profit-amount {
+  color: #28a745;
+}
+
+.notes-content {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid #e9ecef;
+  line-height: 1.6;
+  color: #495057;
+}
+
+.detail-actions {
+  padding: 1.5rem 0 0 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  border-top: 1px solid #e9ecef;
+  margin-top: 2rem;
+}
+
+/* Table Overflow for Mobile */
+@media (max-width: 768px) {
+  .orders-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .orders-controls {
+    justify-content: stretch;
+    flex-direction: column;
+  }
+  
+  .search-filter-group {
+    flex-direction: column;
+  }
+  
+  .search-input {
+    min-width: 100%;
+  }
+  
+  .orders-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  
+  .orders-table thead, .orders-table tbody, .orders-table th, .orders-table td, .orders-table tr {
+    display: block;
+  }
+  
+  .orders-table thead tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+  
+  .orders-table tr {
+    border: 1px solid #ccc;
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 8px;
+    background: white;
+  }
+  
+  .orders-table td {
+    border: none;
+    position: relative;
+    padding: 8px 8px 8px 50%;
+    white-space: normal;
+  }
+  
+  .orders-table td:before {
+    content: attr(data-label) ": ";
+    position: absolute;
+    left: 6px;
+    width: 45%;
+    padding-right: 10px;
+    white-space: nowrap;
+    font-weight: bold;
+    color: #495057;
+  }
+  
+  .status-cell {
+    flex-direction: row;
+    align-items: center;
+  }
+  
+  .action-buttons-cell {
+    justify-content: flex-end;
+  }
+  
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .detail-actions {
+    flex-direction: column-reverse;
+  }
+}
+
+/* Sale Modal Styles */
+.sale-modal {
+  max-width: 900px;
+}
+
+.sale-form-content {
+  padding: 2rem;
+}
+
+.order-summary {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.order-summary h3 {
+  margin: 0 0 1rem 0;
+  color: #2c3e50;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.summary-item span:first-child {
+  font-weight: 600;
+  color: #495057;
+}
+
+.summary-item span:last-child {
+  color: #2c3e50;
+  font-weight: 700;
+}
+
+/* Profit Summary */
+.profit-summary {
+  background: linear-gradient(135deg, #28a74510, #20c99720);
+  border: 2px solid #28a745;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.profit-summary h3 {
+  color: #28a745;
+  margin: 0 0 1rem 0;
+  border-bottom: 2px solid #28a745;
+  padding-bottom: 0.5rem;
+  display: inline-block;
+}
+
+.profit-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.profit-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.profit-item.total-profit {
+  background: #28a74510;
+  border-color: #28a745;
+  font-size: 1.1rem;
+  margin-top: 0.5rem;
+}
+
+.profit-value {
+  color: #28a745;
+  font-weight: 700;
+}
+
+.profit-value.positive {
+  color: #28a745;
+}
+
+.profit-value.negative {
+  color: #dc3545;
+}
+
+.cost-value {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.btn-success {
+  background: #28a745;
+  color: white;
+  border: 1px solid #28a745;
+}
+
+.btn-success:hover {
+  background: #218838;
+  border-color: #1e7e34;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+/* Mobile Responsive for Sale Modal */
+@media (max-width: 768px) {
+  .sale-modal {
+    max-height: 95vh;
+  }
+  
+  .sale-form-content {
+    padding: 1.5rem;
+  }
+  
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .profit-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
+
+/* Inventory Specific Styles */
+.vehicle-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.vehicle-details small {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.feature-tag {
+  display: inline-block;
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  color: #1565c0;
+  padding: 0.3rem 0.6rem;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  margin: 0.2rem 0.3rem 0.2rem 0;
+  border: 1px solid #90caf9;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.feature-tag:hover {
+  background: linear-gradient(135deg, #bbdefb, #90caf9);
+  transform: translateY(-1px);
+}
+
+.features-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.no-price {
+  color: #666;
+  font-style: italic;
+}
+
+.selling-price {
+  color: #4caf50;
+  font-weight: 600;
+}
+
+.sold-info {
+  margin-top: 0.3rem;
+}
+
+.sold-info small {
+  color: #2196f3;
+  font-weight: 600;
+}
+
+.profit-positive {
+  color: #4caf50 !important;
+}
+
+.profit-negative {
+  color: #f44336 !important;
+}
+
+/* Inventory Metric Icons */
+.metric-icon.available {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+}
+
+.metric-icon.reserved {
+  background: linear-gradient(135deg, #FF9800, #F57C00);
+}
+
+.metric-icon.inventory-value {
+  background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+}
+
+/* Additional Form Styles for Inventory */
+.form-help {
+  color: #666;
+  font-size: 0.8rem;
+  margin-top: 0.3rem;
+  display: block;
+}
+
+/* Condition and Status Badges */
+.badge.badge-danger {
+  background: linear-gradient(135deg, #f44336, #d32f2f);
+  color: white;
+}
+
+/* Billing & POS Specific Styles */
+.customer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.customer-info small {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.paid-amount {
+  color: #4caf50;
+  font-weight: 600;
+}
+
+.balance-amount.paid-full {
+  color: #4caf50;
+  font-weight: 600;
+}
+
+.balance-amount.pending-balance {
+  color: #f44336;
+  font-weight: 600;
+}
+
+.pos-action-card {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.pos-action-card:hover {
+  background: #e9ecef;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.pos-action-card h4 {
+  margin-bottom: 0.5rem;
+  color: #2c3e50;
+}
+
+.pos-action-card p {
+  color: #666;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.pos-action-card .btn {
+  width: 100%;
+}
+
+/* Billing Metric Icons */
+.metric-icon.revenue {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+}
+
+.metric-icon.deposits {
+  background: linear-gradient(135deg, #2196F3, #1976D2);
+}
+
+.metric-icon.pending-payments {
+  background: linear-gradient(135deg, #FF9800, #F57C00);
+}
+
+.metric-icon.reservations {
+  background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+}
+
+/* Transaction Status Badges */
+.badge.badge-secondary {
+  background: linear-gradient(135deg, #6c757d, #5a6268);
+  color: white;
+}
+
+/* Payment and Transaction Modal Styles */
+.payment-modal {
+  max-width: 700px;
+}
+
+.payment-summary {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  margin: 1.5rem 2rem;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.payment-summary h3 {
+  color: #2c3e50;
+  margin-bottom: 1rem;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+}
+
+.summary-item span:first-child {
+  color: #666;
+  font-weight: 500;
+}
+
+.summary-item span:last-child {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.balance-highlight {
+  color: #e74c3c !important;
+  font-size: 1.1em;
+}
+
+.payments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.payment-record {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1rem;
+  transition: all 0.2s ease;
+}
+
+.payment-record:hover {
+  border-color: #adb5bd;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.payment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.payment-amount {
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #28a745;
+}
+
+.payment-date {
+  color: #666;
+  font-size: 0.9em;
+}
+
+.payment-details {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.9em;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+.payment-notes {
+  font-size: 0.85em;
+  color: #555;
+  font-style: italic;
+  background: #ffffff;
+  padding: 0.5rem;
+  border-radius: 4px;
+  border-left: 4px solid #007bff;
+}
+
+/* Enhanced Card Styling */
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.card h3 {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.3rem;
+  color: #2c3e50;
+  font-weight: 700;
+  border-bottom: 3px solid #f0f0f0;
+  padding-bottom: 12px;
+}
+
+/* Chart Containers */
+.chart-container {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+}
+
+.chart-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 1.5rem;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.chart-placeholder {
+  width: 100%;
+  height: 300px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7f8c8d;
+  font-size: 16px;
+  font-style: italic;
+}
+
+/* Stats Bar */
+.stats-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin: 1rem 0;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.stat-row:hover {
+  background: #e9ecef;
+}
+
+.stat-row .label {
+  color: #7f8c8d;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.stat-row .value {
+  color: #2c3e50;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.stat-row .value.positive {
+  color: #27ae60;
+}
+
+.stat-row .value.negative {
+  color: #e74c3c;
+}
+
+/* Mobile Responsive for Inventory */
+@media (max-width: 768px) {
+  .search-filter-group {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .vehicle-details {
+    text-align: left;
+  }
+  
+  .features-list {
+    justify-content: flex-start;
+  }
+  
+  .feature-tag {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+  
+  .vehicle-info {
+    text-align: left;
+  }
+
+  .pos-action-card {
+    padding: 1rem;
+  }
+  
+  .customer-info {
+    text-align: left;
+  }
+}
+
+/* Print styles for invoice modal */
+@media print {
+  /* HIDE EVERYTHING EXCEPT INVOICE */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* ONLY show invoice modal and its contents */
+  .vehicle-order-form-overlay,
+  .vehicle-order-form-overlay *,
+  .vehicle-order-form,
+  .vehicle-order-form *,
+  .invoice-preview-wrapper,
+  .invoice-preview-wrapper *,
+  .invoice-container,
+  .invoice-container *,
+  .invoice-page,
+  .invoice-page * {
+    visibility: visible !important;
+  }
+
+  /* Hide buttons and UI elements inside modal */
+  .form-header,
+  .close-btn,
+  button,
+  .no-print,
+  .preview-actions {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Position invoice modal to fill page */
+  .vehicle-order-form-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    background: white !important;
+    visibility: visible !important;
+  }
+
+  .vehicle-order-form {
+    position: static !important;
+    max-height: none !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    background: white !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    max-height: 297mm !important;
+    visibility: visible !important;
+  }
+
+  /* Remove padding from invoice wrapper in print */
+  .invoice-preview-wrapper {
+    padding: 0 !important;
+    margin: 0 !important;
+    visibility: visible !important;
+  }
+}
