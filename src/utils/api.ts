@@ -1,5 +1,5 @@
 // API configuration and utilities
-const API_BASE_URL = 'https://carsale-backend-1.onrender.com';
+const API_BASE_URL = 'https://carsale-backend-1.onrender.com/api';
 
 // Helper to get auth token from localStorage
 export const getAuthToken = (): string | null => {
