@@ -26,7 +26,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       onLogin();
     } catch (err: any) {
       console.error('Login error:', err);
-      setError(err.message || 'Failed to connect to server. Make sure backend is running on http://localhost:5000');
+      setError(err.message || 'Failed to connect to server. Make sure backend is running on https://carsale-backend-1.onrender.com/');
       setIsLoading(false);
     }
   };
