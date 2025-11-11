@@ -41,6 +41,7 @@ async function apiCall<T>(
   };
 
   try {
+    console.log(`API Call: ${options.method || 'GET'} ${endpoint}`);
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
     
     // Handle non-JSON responses or errors
@@ -48,10 +49,22 @@ async function apiCall<T>(
       const errorData = await response.json().catch(() => ({ 
         message: `HTTP error! status: ${response.status}` 
       }));
-      throw new Error(errorData.message || 'API request failed');
+      console.error('API Error Response:', {
+        status: response.status,
+        statusText: response.statusText,
+        endpoint,
+        errorData
+      });
+      const error: any = new Error(errorData.message || errorData.error || 'API request failed');
+      error.status = response.status;
+      error.data = errorData;
+      error.endpoint = endpoint;
+      throw error;
     }
 
-    return await response.json();
+    const data = await response.json();
+    console.log(`API Success: ${endpoint}`, data);
+    return data;
   } catch (error) {
     console.error('API call error:', error);
     throw error;

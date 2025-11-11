@@ -458,13 +458,13 @@
 
   /* Single page container */
   .invoice-container {
-    position: absolute !important;
+    position: relative !important;
     top: 0 !important;
     left: 0 !important;
     width: 210mm !important;
-    height: 297mm !important;
-    max-height: 297mm !important;
-    overflow: hidden !important;
+    min-height: 297mm !important;
+    max-height: none !important;
+    overflow: visible !important;
     padding: 0 !important;
     margin: 0 !important;
     page-break-after: avoid !important;
@@ -481,9 +481,9 @@
     margin: 0 !important;
     page-break-inside: avoid !important;
     width: 100% !important;
-    height: 100% !important;
-    max-height: 297mm !important;
-    overflow: hidden !important;
+    min-height: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
     display: flex !important;
     flex-direction: column !important;
     box-sizing: border-box !important;
@@ -581,10 +581,14 @@
   }
 
   .invoice-footer {
-    margin-top: 1mm !important;
-    padding-top: 1mm !important;
+    margin-top: 2mm !important;
+    padding-top: 2mm !important;
     border-top-width: 1px !important;
     flex-shrink: 0 !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    page-break-inside: avoid !important;
   }
 
   .section-heading {
@@ -662,6 +666,17 @@
     font-size: 6px !important;
     margin: 0 !important;
     line-height: 1 !important;
+  }
+
+  /* Ensure footer content is visible */
+  .invoice-footer div {
+    font-size: 8px !important;
+  }
+
+  .invoice-footer p {
+    font-size: 7px !important;
+    margin: 0.5mm 0 !important;
+    line-height: 1.2 !important;
   }
 
   /* Ultra compact payment badges */

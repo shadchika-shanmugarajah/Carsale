@@ -15,6 +15,7 @@ interface VehicleOrder {
     model: string;
     year: number;
     color: string;
+    chassisNo?: string;
     specifications?: string;
   };
   pricing: {
@@ -164,16 +165,22 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ onMoveToInventory }) => {
     }
     
     if (window.confirm(`Move ${order.vehicleDetails.brand} ${order.vehicleDetails.model} to inventory?`)) {
-      onMoveToInventory(order);
-      // Update order status to delivered
-      const orderId = order._id || order.id;
-      if (orderId) {
-        await handleUpdateOrder(orderId, {
-          orderStatus: 'delivered',
-          deliveryDate: new Date().toISOString().split('T')[0]
-        });
+      try {
+        // Move to inventory first
+        await onMoveToInventory(order);
+        
+        // Then update order status to delivered
+        const orderId = order._id || order.id;
+        if (orderId) {
+          await handleUpdateOrder(orderId, {
+            orderStatus: 'delivered',
+            deliveryDate: new Date().toISOString().split('T')[0]
+          });
+        }
+      } catch (error: any) {
+        console.error('Error in move to inventory process:', error);
+        alert(`Failed to complete the operation: ${error.message}`);
       }
-      alert('Vehicle moved to inventory successfully!');
     }
   };
 
@@ -446,6 +453,7 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ onMoveToInventory }) => {
                     model: formData.get('model') as string,
                     year: year,
                     color: formData.get('color') as string,
+                    chassisNo: formData.get('chassisNo') as string,
                     specifications: formData.get('specifications') as string
                   },
                   pricing: {
@@ -515,6 +523,10 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ onMoveToInventory }) => {
                     <div className="info-item">
                       <label>Color *</label>
                       <input type="text" name="color" className="form-input" defaultValue={editingOrder.vehicleDetails.color} required />
+                    </div>
+                    <div className="info-item">
+                      <label>Chassis No</label>
+                      <input type="text" name="chassisNo" className="form-input" defaultValue={editingOrder.vehicleDetails.chassisNo} placeholder="e.g., ABC-1234" />
                     </div>
                     <div className="info-item full-width">
                       <label>Specifications</label>
@@ -609,6 +621,7 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ onMoveToInventory }) => {
                     model: formData.get('model') as string,
                     year: year,
                     color: formData.get('color') as string,
+                    chassisNo: formData.get('chassisNo') as string,
                     specifications: formData.get('specifications') as string
                   },
                   pricing: {
@@ -669,6 +682,10 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ onMoveToInventory }) => {
                     <div className="info-item">
                       <label>Color *</label>
                       <input type="text" name="color" className="form-input" required />
+                    </div>
+                    <div className="info-item">
+                      <label>Chassis No</label>
+                      <input type="text" name="chassisNo" className="form-input" placeholder="e.g., ABC-1234" />
                     </div>
                     <div className="info-item full-width">
                       <label>Specifications</label>
@@ -746,6 +763,12 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ onMoveToInventory }) => {
                     <label>Color:</label>
                     <span>{selectedOrder.vehicleDetails.color}</span>
                   </div>
+                  {selectedOrder.vehicleDetails.chassisNo && (
+                    <div className="info-item">
+                      <label>Chassis No:</label>
+                      <span>{selectedOrder.vehicleDetails.chassisNo}</span>
+                    </div>
+                  )}
                   {selectedOrder.vehicleDetails.specifications && (
                     <div className="info-item full-width">
                       <label>Specifications:</label>

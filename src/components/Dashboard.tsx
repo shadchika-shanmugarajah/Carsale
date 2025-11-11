@@ -47,13 +47,14 @@ interface VehicleOrder {
   marketValue?: number;
   depreciation?: number;
   // LC and Additional fields
-  vehicleNumber?: string;
+  chassisNo?: string;
   lcAmount?: number;
+  lcNumber?: string;
   lcBank?: string;
   additionalInfo?: string;
   // Basic Information fields
-  vinNumber?: string;
-  licensePlateNumber?: string;
+  grade?: string;
+  biNumber?: string;
   customBasicInfo?: { [key: string]: string };
 }
 
@@ -76,7 +77,9 @@ interface InventoryItem {
   lastUpdated: string;
   features: string[];
   images?: string[];
-  vin?: string;
+  chassisNo?: string;
+  engineNo?: string;
+  grade?: string;
   licensePlate?: string;
   registrationNo?: string;
   fuelType: 'gasoline' | 'diesel' | 'hybrid' | 'electric';
@@ -115,7 +118,9 @@ interface InventoryFormData {
   currency: 'USD' | 'JPY' | 'EUR' | 'GBP' | 'LKR';
   location: string;
   features: string[];
-  vin?: string;
+  chassisNo?: string;
+  engineNo?: string;
+  grade?: string;
   licensePlate?: string;
   fuelType: 'gasoline' | 'diesel' | 'hybrid' | 'electric';
   transmission: 'manual' | 'automatic' | 'cvt';
@@ -266,13 +271,14 @@ interface VehicleOrderFormData {
   };
   paymentMethod: string;
   // New fields
-  vehicleNumber: string;
+  chassisNo: string;
   lcAmount: number;
+  lcNumber: string;
   lcBank: string;
   additionalInfo: string;
   // Basic Information fields
-  vinNumber: string;
-  licensePlateNumber: string;
+  grade: string;
+  biNumber: string;
   customBasicInfo: { [key: string]: string };
 }
 
@@ -389,6 +395,7 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
       setIsLoadingInventory(true);
       const response = await inventoryAPI.getAll({ limit: 1000 });
       console.log('Loaded inventory:', response.items.length, 'items');
+      console.log('Inventory statuses:', response.items.map((i: any) => ({ id: i._id, brand: i.brand, model: i.model, status: i.status })));
       // Map API data to Dashboard format with defaults for missing fields
       const mappedItems = response.items.map((item: any) => ({
         id: item._id,
@@ -409,7 +416,9 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
         lastUpdated: item.updatedAt ? new Date(item.updatedAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         features: item.features || [],
         images: item.images || [],
-        vin: item.vin,
+        chassisNo: item.chassisNo,
+        engineNo: item.engineNo,
+        grade: item.grade,
         licensePlate: item.licensePlate,
         registrationNo: item.registrationNo || item.licensePlate,
         fuelType: item.fuelType || 'gasoline',
@@ -434,15 +443,21 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
       setIsLoadingTransactions(true);
       const response = await transactionAPI.getAll({ limit: 1000 });
       console.log('Loaded transactions:', response.transactions.length, 'transactions');
+      console.log('Sample transaction from backend:', response.transactions[0]);
       // Map API data to Dashboard format with defaults
       const mappedTransactions = response.transactions.map((txn: any) => {
         const customerId = typeof txn.customerId === 'object' ? (txn.customerId?._id || txn.customerId?.id) : txn.customerId;
+        const inventoryId = typeof txn.inventoryId === 'object' ? (txn.inventoryId?._id || txn.inventoryId?.id) : txn.inventoryId;
         
         console.log('Transaction mapping:', {
           transactionId: txn._id,
           originalCustomerId: txn.customerId,
           extractedCustomerId: customerId,
-          customerIdType: typeof txn.customerId
+          customerIdType: typeof txn.customerId,
+          originalInventoryId: txn.inventoryId,
+          extractedInventoryId: inventoryId,
+          inventoryIdType: typeof txn.inventoryId,
+          rawTxnKeys: Object.keys(txn)
         });
         
         return {
@@ -451,7 +466,7 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
           type: txn.type || 'sale',
           status: txn.status || 'pending',
           customerId: customerId,
-          inventoryId: txn.inventoryId,
+          inventoryId: inventoryId,
           vehicleDetails: txn.vehicleDetails || {},
           pricing: txn.pricing || { vehiclePrice: 0, taxes: 0, fees: 0, discount: 0, totalAmount: 0 },
           totalPaid: txn.totalPaid || 0,
@@ -503,7 +518,9 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
         brand: itemData.brand,
         year: Number(itemData.year) || new Date().getFullYear(),
         color: itemData.color,
-        vin: itemData.vin || undefined,
+        chassisNo: itemData.chassisNo || undefined,
+        engineNo: itemData.engineNo || undefined,
+        grade: itemData.grade || undefined,
         licensePlate: itemData.licensePlate || undefined,
         fuelType: itemData.fuelType,
         engineSize: itemData.engineSize || undefined,
@@ -533,13 +550,19 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
   
   const handleUpdateInventoryItem = async (id: string, itemData: any) => {
     try {
-      // Map frontend data to backend model format
+      console.log('=== INVENTORY UPDATE DEBUG ===');
+      console.log('Item ID:', id);
+      console.log('Raw form data:', itemData);
+      
+      // Map frontend data to backend model format - EXACT same as create
       const backendData = {
         model: itemData.model,
         brand: itemData.brand,
         year: Number(itemData.year) || new Date().getFullYear(),
         color: itemData.color,
-        vin: itemData.vin || undefined,
+        chassisNo: itemData.chassisNo || undefined,
+        engineNo: itemData.engineNo || undefined,
+        grade: itemData.grade || undefined,
         licensePlate: itemData.licensePlate || undefined,
         fuelType: itemData.fuelType,
         engineSize: itemData.engineSize || undefined,
@@ -554,14 +577,28 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
         images: itemData.images || []
       };
       
-      console.log('Updating inventory item with data:', JSON.stringify(backendData, null, 2));
+      console.log('Sending to backend:', JSON.stringify(backendData, null, 2));
+      console.log('Field types:', {
+        model: typeof backendData.model,
+        brand: typeof backendData.brand,
+        year: typeof backendData.year,
+        color: typeof backendData.color,
+        fuelType: typeof backendData.fuelType,
+        purchasePrice: typeof backendData.purchasePrice
+      });
       
-      await inventoryAPI.update(id, backendData);
+      const result = await inventoryAPI.update(id, backendData);
+      console.log('✅ Update successful, result:', result);
+      
       await loadInventory(); // Refresh list
       alert('✅ Inventory item updated successfully!');
     } catch (error: any) {
-      console.error('Error updating inventory item:', error);
-      alert(`❌ Failed to update item: ${error.message}`);
+      console.error('❌ ERROR DETAILS:');
+      console.error('Error object:', error);
+      console.error('Error message:', error.message);
+      console.error('Error response:', error.response);
+      console.error('Error data:', error.data);
+      alert(`❌ Failed to update item: ${error.message}\n\nCheck console for details.`);
       throw error;
     }
   };
@@ -579,11 +616,16 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
   };
   
   // Transaction CRUD operations
-  const handleSaveTransaction = async (txnData: any) => {
+  const handleSaveTransaction = async (txnData: any, skipReload: boolean = false) => {
     try {
-      const response = await transactionAPI.create(txnData);
-      await loadTransactions(); // Refresh list
-      alert('✅ Transaction created successfully!');
+      console.log('Sending transaction to API:', txnData);
+      const response: any = await transactionAPI.create(txnData);
+      console.log('Transaction created, backend response:', response);
+      console.log('Created transaction inventoryId:', response.transaction?.inventoryId);
+      if (!skipReload) {
+        await loadTransactions(); // Refresh list
+        alert('✅ Transaction created successfully!');
+      }
       return response.transaction;
     } catch (error: any) {
       console.error('Error creating transaction:', error);
@@ -592,11 +634,13 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
     }
   };
   
-  const handleUpdateTransaction = async (id: string, txnData: any) => {
+  const handleUpdateTransaction = async (id: string, txnData: any, skipAlert: boolean = false) => {
     try {
       await transactionAPI.update(id, txnData);
       await loadTransactions(); // Refresh list
-      alert('✅ Transaction updated successfully!');
+      if (!skipAlert) {
+        alert('✅ Transaction updated successfully!');
+      }
     } catch (error: any) {
       console.error('Error updating transaction:', error);
       alert(`❌ Failed to update transaction: ${error.message}`);
@@ -626,37 +670,46 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
   const [customDateRange, setCustomDateRange] = useState({ start: '', end: '' });
 
   // Handler to move order to inventory
-  const handleMoveOrderToInventory = (order: any) => {
-    // Create inventory item from order
-    const newInventoryItem: InventoryItem = {
-      id: `INV${(inventoryItems.length + 1).toString().padStart(3, '0')}`,
-      vin: `VIN${Date.now()}`,
-      licensePlate: '',
-      brand: order.vehicleDetails.brand,
-      model: order.vehicleDetails.model,
-      year: order.vehicleDetails.year,
-      color: order.vehicleDetails.color,
-      mileage: 0,
-      condition: 'excellent',
-      fuelType: 'gasoline',
-      transmission: 'automatic',
-      engineSize: '',
-      bodyType: 'sedan',
-      purchasePrice: order.pricing.totalAmount,
-      sellingPrice: order.pricing.totalAmount * 1.15, // 15% markup
-      marketValue: order.pricing.totalAmount * 1.15,
-      status: 'available',
-      location: 'Showroom',
-      dateAdded: new Date().toISOString().split('T')[0],
-      lastUpdated: new Date().toISOString().split('T')[0],
-      currency: 'USD',
-      images: [],
-      features: order.vehicleDetails.specifications ? [order.vehicleDetails.specifications] : [],
-      notes: `Arrived from order: ${order.orderNumber}`,
-      registrationNo: ''
-    };
-
-    setInventoryItems([...inventoryItems, newInventoryItem]);
+  const handleMoveOrderToInventory = async (order: any) => {
+    try {
+      console.log('=== MOVING ORDER TO INVENTORY ===');
+      console.log('Order:', order);
+      
+      // Create inventory item from order data
+      const inventoryData = {
+        model: order.vehicleDetails.model,
+        brand: order.vehicleDetails.brand,
+        year: Number(order.vehicleDetails.year) || new Date().getFullYear(),
+        color: order.vehicleDetails.color,
+        chassisNo: order.vehicleDetails.chassisNo || undefined,
+        engineNo: order.vehicleDetails.engineNo || undefined,
+        grade: order.vehicleDetails.grade || undefined,
+        licensePlate: undefined,
+        fuelType: order.vehicleDetails.fuelType || 'gasoline',
+        engineSize: order.vehicleDetails.engineSize || undefined,
+        transmission: order.vehicleDetails.transmission || 'automatic',
+        mileage: 0,
+        purchasePrice: Number(order.pricing.totalAmount) || 0,
+        sellingPrice: Number(order.pricing.totalAmount * 1.15) || undefined, // 15% markup
+        currency: order.currency || 'LKR',
+        status: 'available' as const,
+        location: 'Showroom',
+        notes: `Arrived from customer order: ${order.orderNumber}`,
+        images: []
+      };
+      
+      console.log('Creating inventory item:', inventoryData);
+      
+      // Save to database
+      await handleSaveInventoryItem(inventoryData);
+      
+      console.log('✅ Vehicle successfully moved to inventory');
+      alert('✅ Vehicle moved to inventory successfully!');
+      
+    } catch (error: any) {
+      console.error('❌ Error moving order to inventory:', error);
+      alert(`❌ Failed to move to inventory: ${error.message}`);
+    }
   };
   
   // Sample data - Now loaded from API
@@ -700,13 +753,14 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
       saleDate: '2024-04-10',
       marketValue: 31000,
       // New fields
-      vehicleNumber: 'ABC-1234',
+      chassisNo: 'ABC-1234',
       lcAmount: 22000,
+      lcNumber: 'LC-2024-001',
       lcBank: 'Commercial Bank of Ceylon',
       additionalInfo: 'Premium package with navigation system and extended warranty',
       // Basic Information fields
-      vinNumber: '1HGBH41JXMN109186',
-      licensePlateNumber: 'CAR-5678',
+      grade: 'Premium',
+      biNumber: 'BI-5678',
       customBasicInfo: {
         'Engine Type': '2.5L 4-Cylinder',
         'Color': 'Pearl White',
@@ -744,8 +798,8 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
       lcBank: 'Bank of Ceylon (BOC)',
       additionalInfo: 'Hybrid vehicle with advanced safety features',
       // Basic Information fields
-      vinNumber: '2HGFC2F59LH012345',
-      licensePlateNumber: 'HND-9876',
+      grade: 'Standard',
+      biNumber: 'BI-9876',
       customBasicInfo: {
         'Engine Type': 'Hybrid 2.0L',
         'Color': 'Metallic Blue',
@@ -826,7 +880,9 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
       dateAdded: '2024-01-15',
       lastUpdated: '2024-09-15',
       features: ['Hybrid Engine', 'Navigation System', 'Leather Seats', 'Sunroof', 'Backup Camera'],
-      vin: '1HGCM82633A123456',
+      chassisNo: '1HGCM82633A123456',
+      engineNo: 'ENG-001',
+      grade: 'Premium',
       licensePlate: 'D-12345',
       fuelType: 'hybrid',
       transmission: 'automatic',
@@ -854,7 +910,9 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
       dateAdded: '2024-02-20',
       lastUpdated: '2024-09-10',
       features: ['All-Wheel Drive', 'Premium Package', 'Panoramic Roof', 'Apple CarPlay', 'Heated Seats'],
-      vin: '5UXCR6C50M0123456',
+      chassisNo: '5UXCR6C50M0123456',
+      engineNo: 'ENG-002',
+      grade: 'Premium',
       licensePlate: 'D-67890',
       fuelType: 'gasoline',
       transmission: 'automatic',
@@ -888,7 +946,9 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
       dateAdded: '2024-03-01',
       lastUpdated: '2024-09-01',
       features: ['Track Package', 'Carbon Fiber Body', 'Racing Seats', 'Premium Audio', 'Launch Control'],
-      vin: 'JN1AR5EF6PM123456',
+      chassisNo: 'JN1AR5EF6PM123456',
+      engineNo: 'ENG-003',
+      grade: 'Track Edition',
       licensePlate: 'D-GTR24',
       fuelType: 'gasoline',
       transmission: 'automatic',
@@ -915,7 +975,9 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
       dateAdded: '2024-01-30',
       lastUpdated: '2024-08-15',
       features: ['Autopilot', 'Premium Interior', 'Glass Roof', 'Supercharging', 'Over-the-Air Updates'],
-      vin: '5YJ3E1EB4MF123456',
+      chassisNo: '5YJ3E1EB4MF123456',
+      engineNo: 'MOTOR-004',
+      grade: 'Long Range',
       licensePlate: 'D-TESLA',
       fuelType: 'electric',
       transmission: 'automatic',
@@ -950,7 +1012,9 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
       dateAdded: '2024-03-10',
       lastUpdated: '2024-09-05',
       features: ['4x4 Capability', 'Removable Doors', 'Rock Rails', 'Skid Plates', 'LED Lighting'],
-      vin: '1C4HJXFG1NW123456',
+      chassisNo: '1C4HJXFG1NW123456',
+      engineNo: 'ENG-005',
+      grade: 'Rubicon',
       licensePlate: 'D-JEEP1',
       fuelType: 'gasoline',
       transmission: 'manual',
@@ -1350,13 +1414,14 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
       paymentMethod: formData.paymentMethod,
       notes: formData.notes,
       // New fields
-      vehicleNumber: formData.vehicleNumber || undefined,
+      chassisNo: formData.chassisNo || undefined,
       lcAmount: formData.lcAmount || undefined,
+      lcNumber: formData.lcNumber || undefined,
       lcBank: formData.lcBank || undefined,
       additionalInfo: formData.additionalInfo || undefined,
       // Basic Information fields
-      vinNumber: formData.vinNumber || undefined,
-      licensePlateNumber: formData.licensePlateNumber || undefined,
+      grade: formData.grade || undefined,
+      biNumber: formData.biNumber || undefined,
       customBasicInfo: Object.keys(formData.customBasicInfo).length > 0 ? formData.customBasicInfo : undefined
     };
     
@@ -1403,6 +1468,9 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
   // Inventory handler functions - Now using API functions defined above
 
   const handleEditInventoryItem = (item: InventoryItem) => {
+    console.log('=== EDITING INVENTORY ITEM ===');
+    console.log('Item to edit:', item);
+    console.log('Item fields:', Object.keys(item));
     setEditingInventoryItem(item);
     setShowInventoryForm(true);
   };
@@ -1421,16 +1489,26 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
   };
 
   const handleInventoryFormSubmit = async (formData: InventoryFormData) => {
+    console.log('=== INVENTORY FORM SUBMIT ===');
+    console.log('Editing item?:', !!editingInventoryItem);
+    console.log('Form data:', formData);
+    
     if (editingInventoryItem) {
-      // Update existing item
-      const itemId = editingInventoryItem.id || editingInventoryItem._id;
+      // Update existing item - USE _id (MongoDB ID) not id (custom ID)
+      const itemId = editingInventoryItem._id || editingInventoryItem.id;
+      console.log('Item IDs - _id:', editingInventoryItem._id, 'id:', editingInventoryItem.id);
+      console.log('Using item ID:', itemId);
       if (itemId) {
         await handleUpdateInventoryItem(itemId, formData);
         setShowInventoryForm(false);
         setEditingInventoryItem(null);
+      } else {
+        console.error('No valid ID found for item:', editingInventoryItem);
+        alert('❌ Error: Cannot update item - no valid ID found');
       }
     } else {
       // Create new item
+      console.log('Creating new item');
       await handleSaveInventoryItem(formData);
       setShowInventoryForm(false);
     }
@@ -1576,6 +1654,11 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
         alert('⚠️ Transaction not found');
         return;
       }
+      
+      console.log('=== PAYMENT PROCESSING DEBUG ===');
+      console.log('Transaction found:', transaction);
+      console.log('Transaction inventoryId:', transaction.inventoryId);
+      console.log('Available inventory items:', inventoryItems.map(i => ({ id: i.id, _id: i._id, brand: i.brand, model: i.model, status: i.status })));
 
       const newPayment: PaymentRecord = {
         id: `PAY${Date.now()}`,
@@ -1626,20 +1709,109 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
       console.log('Updating transaction with payment:', JSON.stringify(updateData, null, 2));
 
       // Save to database
-      await handleUpdateTransaction(transaction._id || transaction.id, updateData);
+      await handleUpdateTransaction(transaction._id || transaction.id, updateData, true);
 
       // Update inventory status if fully paid
-      if (balanceRemaining <= 0 && transaction.inventoryId) {
-        const vehicle = inventoryItems.find(item => 
-          item.id === transaction.inventoryId || item._id === transaction.inventoryId
-        );
-        if (vehicle && (vehicle._id || vehicle.id)) {
-          await inventoryAPI.update(vehicle._id || vehicle.id, {
-            ...vehicle,
-            status: 'sold'
-          });
-          await loadInventory(); // Refresh inventory list
+      if (balanceRemaining <= 0) {
+        console.log('=== INVENTORY UPDATE START ===');
+        console.log('Payment completed! Looking for vehicle to mark as SOLD');
+        console.log('Transaction inventoryId:', transaction.inventoryId);
+        console.log('Transaction vehicle details:', transaction.vehicleDetails);
+        
+        // Try to find vehicle by inventoryId first, then by matching vehicle details
+        let vehicle = null;
+        
+        if (transaction.inventoryId) {
+          vehicle = inventoryItems.find(item => 
+            item.id === transaction.inventoryId || item._id === transaction.inventoryId
+          );
+          console.log('Found vehicle by inventoryId:', vehicle ? 'YES' : 'NO');
         }
+        
+        // If not found by inventoryId, try matching by vehicle details
+        if (!vehicle && transaction.vehicleDetails) {
+          console.log('Trying to find vehicle by matching vehicle details...');
+          vehicle = inventoryItems.find(item => 
+            item.brand === transaction.vehicleDetails.brand &&
+            item.model === transaction.vehicleDetails.model &&
+            item.year === transaction.vehicleDetails.year &&
+            item.color === transaction.vehicleDetails.color &&
+            (item.status === 'reserved' || item.status === 'available')
+          );
+          console.log('Found vehicle by details:', vehicle ? 'YES' : 'NO');
+          if (vehicle) {
+            console.log('Matched vehicle:', {
+              id: vehicle._id || vehicle.id,
+              brand: vehicle.brand,
+              model: vehicle.model,
+              year: vehicle.year,
+              color: vehicle.color,
+              currentStatus: vehicle.status
+            });
+          }
+        }
+        
+        if (vehicle && (vehicle._id || vehicle.id)) {
+          const vehicleId = vehicle._id || vehicle.id;
+          console.log('Updating vehicle ID:', vehicleId);
+          console.log('Current status:', vehicle.status);
+          console.log('New status: sold');
+          
+          try {
+            const updateData = {
+              model: vehicle.model,
+              brand: vehicle.brand,
+              year: vehicle.year,
+              color: vehicle.color,
+              chassisNo: vehicle.chassisNo || undefined,
+              engineNo: vehicle.engineNo || undefined,
+              grade: vehicle.grade || undefined,
+              licensePlate: vehicle.licensePlate || undefined,
+              fuelType: vehicle.fuelType,
+              engineSize: vehicle.engineSize || undefined,
+              transmission: vehicle.transmission || undefined,
+              mileage: vehicle.mileage || undefined,
+              purchasePrice: vehicle.purchasePrice,
+              sellingPrice: vehicle.sellingPrice || undefined,
+              currency: vehicle.currency,
+              status: 'sold' as const,
+              location: vehicle.location || undefined,
+              notes: vehicle.notes || undefined,
+              images: vehicle.images || []
+            };
+            
+            const updateResult = await inventoryAPI.update(vehicleId, updateData);
+            console.log('✅ Inventory update API response:', updateResult);
+            
+            // Verify directly from API
+            if (updateResult.item) {
+              console.log('✅ Confirmed - New status from API:', updateResult.item.status);
+            }
+            
+            // Force refresh inventory
+            console.log('Refreshing inventory list...');
+            await loadInventory();
+            console.log('✅ Inventory refreshed successfully');
+            
+          } catch (error) {
+            console.error('❌ Failed to update inventory:', error);
+            alert('⚠️ Warning: Vehicle status update failed. Please update manually.');
+          }
+        } else {
+          console.error('❌ Vehicle not found in inventory!');
+          console.log('Could not find vehicle by inventoryId OR by matching details');
+          console.log('Available inventory:', inventoryItems.map(i => ({ 
+            id: i._id, 
+            brand: i.brand, 
+            model: i.model, 
+            year: i.year, 
+            color: i.color, 
+            status: i.status 
+          })));
+        }
+        console.log('=== INVENTORY UPDATE END ===');
+      } else {
+        console.log('💰 Not fully paid yet. Remaining:', balanceRemaining);
       }
 
       setShowPaymentModal(false);
@@ -1782,17 +1954,47 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
 
       console.log('Creating transaction with data:', JSON.stringify(transactionData, null, 2));
 
-      // Save to database
-      const response = await handleSaveTransaction(transactionData);
+      // Save to database (skip reload for speed)
+      const response = await handleSaveTransaction(transactionData, true);
+      console.log('Transaction created, response:', response);
       
       // Update inventory status to reserved
       if (vehicle._id || vehicle.id) {
-        await inventoryAPI.update(vehicle._id || vehicle.id, {
-          ...vehicle,
-          status: 'reserved'
-        });
-        await loadInventory(); // Refresh inventory list
+        console.log('Updating vehicle status to RESERVED for vehicle ID:', vehicle._id || vehicle.id);
+        
+        const updateData = {
+          model: vehicle.model,
+          brand: vehicle.brand,
+          year: vehicle.year,
+          color: vehicle.color,
+          chassisNo: vehicle.chassisNo || undefined,
+          engineNo: vehicle.engineNo || undefined,
+          grade: vehicle.grade || undefined,
+          licensePlate: vehicle.licensePlate || undefined,
+          fuelType: vehicle.fuelType,
+          engineSize: vehicle.engineSize || undefined,
+          transmission: vehicle.transmission || undefined,
+          mileage: vehicle.mileage || undefined,
+          purchasePrice: vehicle.purchasePrice,
+          sellingPrice: vehicle.sellingPrice || undefined,
+          currency: vehicle.currency,
+          status: 'reserved' as const,
+          location: vehicle.location || undefined,
+          notes: vehicle.notes || undefined,
+          images: vehicle.images || []
+        };
+        
+        await inventoryAPI.update(vehicle._id || vehicle.id, updateData);
+        console.log('Inventory updated to reserved');
       }
+
+      // Single reload at the end for both transaction and inventory
+      console.log('Reloading data...');
+      await Promise.all([
+        loadTransactions(),
+        loadInventory()
+      ]);
+      console.log('Data refreshed');
 
       setShowTransactionModal(false);
       alert('✅ Transaction created and saved successfully!');
@@ -1831,7 +2033,7 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
                          item.brand.toLowerCase().includes(inventorySearchTerm.toLowerCase()) ||
                          item.id.toLowerCase().includes(inventorySearchTerm.toLowerCase()) ||
                          item.color.toLowerCase().includes(inventorySearchTerm.toLowerCase()) ||
-                         (item.vin && item.vin.toLowerCase().includes(inventorySearchTerm.toLowerCase())) ||
+                         (item.chassisNo && item.chassisNo.toLowerCase().includes(inventorySearchTerm.toLowerCase())) ||
                          (item.licensePlate && item.licensePlate.toLowerCase().includes(inventorySearchTerm.toLowerCase()));
     const matchesStatus = inventoryStatusFilter === 'all' || item.status === inventoryStatusFilter;
     const matchesCondition = inventoryConditionFilter === 'all' || item.condition === inventoryConditionFilter;
@@ -2968,13 +3170,14 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
             },
             paymentMethod: editingOrder.paymentMethod || 'Bank Transfer',
             // New fields
-            vehicleNumber: editingOrder.vehicleNumber || '',
+            chassisNo: editingOrder.chassisNo || '',
             lcAmount: editingOrder.lcAmount || 0,
+            lcNumber: editingOrder.lcNumber || '',
             lcBank: editingOrder.lcBank || '',
             additionalInfo: editingOrder.additionalInfo || '',
             // Basic Information fields
-            vinNumber: editingOrder.vinNumber || '',
-            licensePlateNumber: editingOrder.licensePlateNumber || '',
+            grade: editingOrder.grade || '',
+            biNumber: editingOrder.biNumber || '',
             customBasicInfo: editingOrder.customBasicInfo || {},
           } : undefined}
           isEditing={!!editingOrder}
@@ -3095,20 +3298,20 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
                 </div>
 
                 {/* Basic Information */}
-                {(orderDetailsModal.vinNumber || orderDetailsModal.licensePlateNumber || (orderDetailsModal.customBasicInfo && Object.keys(orderDetailsModal.customBasicInfo).length > 0)) && (
+                {(orderDetailsModal.grade || orderDetailsModal.biNumber || (orderDetailsModal.customBasicInfo && Object.keys(orderDetailsModal.customBasicInfo).length > 0)) && (
                   <div className="detail-section">
                     <h3>📋 Basic Information</h3>
                     <div className="detail-grid">
-                      {orderDetailsModal.vinNumber && (
+                      {orderDetailsModal.grade && (
                         <div className="detail-item">
-                          <label>VIN Number:</label>
-                          <span>{orderDetailsModal.vinNumber}</span>
+                          <label>Grade:</label>
+                          <span>{orderDetailsModal.grade}</span>
                         </div>
                       )}
-                      {orderDetailsModal.licensePlateNumber && (
+                      {orderDetailsModal.biNumber && (
                         <div className="detail-item">
-                          <label>License Plate:</label>
-                          <span>{orderDetailsModal.licensePlateNumber}</span>
+                          <label>BI Number:</label>
+                          <span>{orderDetailsModal.biNumber}</span>
                         </div>
                       )}
                     </div>
@@ -3131,14 +3334,14 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
                 )}
 
                 {/* Vehicle Details */}
-                {(orderDetailsModal.vehicleNumber || orderDetailsModal.additionalInfo) && (
+                {(orderDetailsModal.chassisNo || orderDetailsModal.additionalInfo) && (
                   <div className="detail-section">
                     <h3>Vehicle Details</h3>
                     <div className="detail-grid">
-                      {orderDetailsModal.vehicleNumber && (
+                      {orderDetailsModal.chassisNo && (
                         <div className="detail-item">
-                          <label>Vehicle Number:</label>
-                          <span>{orderDetailsModal.vehicleNumber}</span>
+                          <label>Chassis No:</label>
+                          <span>{orderDetailsModal.chassisNo}</span>
                         </div>
                       )}
                     </div>
@@ -3226,7 +3429,9 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
             currency: editingInventoryItem.currency,
             location: editingInventoryItem.location,
             features: editingInventoryItem.features,
-            vin: editingInventoryItem.vin,
+            chassisNo: editingInventoryItem.chassisNo,
+            engineNo: editingInventoryItem.engineNo,
+            grade: editingInventoryItem.grade,
             licensePlate: editingInventoryItem.licensePlate,
             fuelType: editingInventoryItem.fuelType,
             transmission: editingInventoryItem.transmission,
@@ -3365,8 +3570,16 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
                       <span>{inventoryDetailsModal.engineSize || 'N/A'}</span>
                     </div>
                     <div className="detail-item">
-                      <label>VIN:</label>
-                      <span>{inventoryDetailsModal.vin || 'N/A'}</span>
+                      <label>Chassis No:</label>
+                      <span>{inventoryDetailsModal.chassisNo || 'N/A'}</span>
+                    </div>
+                    <div className="detail-item">
+                      <label>Engine No:</label>
+                      <span>{inventoryDetailsModal.engineNo || 'N/A'}</span>
+                    </div>
+                    <div className="detail-item">
+                      <label>Grade:</label>
+                      <span>{inventoryDetailsModal.grade || 'N/A'}</span>
                     </div>
                     <div className="detail-item">
                       <label>License Plate:</label>
@@ -3891,7 +4104,9 @@ const InventoryForm: React.FC<InventoryFormProps> = ({ onSubmit, onCancel, initi
       currency: 'LKR',
       location: '',
       features: [],
-      vin: '',
+      chassisNo: '',
+      engineNo: '',
+      grade: '',
       licensePlate: '',
       fuelType: 'gasoline',
       transmission: 'automatic',
@@ -4135,15 +4350,41 @@ const InventoryForm: React.FC<InventoryFormProps> = ({ onSubmit, onCancel, initi
                 </div>
                 
                 <div className="form-group">
-                  <label htmlFor="vin" className="form-label">VIN Number</label>
+                  <label htmlFor="chassisNo" className="form-label">Chassis No</label>
                   <input
                     type="text"
-                    id="vin"
-                    name="vin"
-                    value={formData.vin}
+                    id="chassisNo"
+                    name="chassisNo"
+                    value={formData.chassisNo}
                     onChange={handleInputChange}
                     className="form-input"
-                    placeholder="Vehicle Identification Number"
+                    placeholder="e.g., ABC-1234"
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="engineNo" className="form-label">Engine No</label>
+                  <input
+                    type="text"
+                    id="engineNo"
+                    name="engineNo"
+                    value={formData.engineNo}
+                    onChange={handleInputChange}
+                    className="form-input"
+                    placeholder="e.g., ENG-5678"
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="grade" className="form-label">Grade</label>
+                  <input
+                    type="text"
+                    id="grade"
+                    name="grade"
+                    value={formData.grade}
+                    onChange={handleInputChange}
+                    className="form-input"
+                    placeholder="e.g., Premium, Standard"
                   />
                 </div>
                 
@@ -5201,12 +5442,16 @@ const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({ trans
                 <div className="detail-item">
                   <label>Status:</label>
                   <span className={`badge ${transaction.status === 'completed' ? 'badge-success' : 'badge-info'}`}>
-                    {transaction.status.replace('_', ' ').toUpperCase()}
+                    {transaction.status ? transaction.status.replace('_', ' ').toUpperCase() : 'N/A'}
                   </span>
                 </div>
                 <div className="detail-item">
                   <label>Invoice Number:</label>
                   <span>{transaction.invoiceNumber || 'Not generated'}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Inventory ID:</label>
+                  <span>{transaction.inventoryId || 'Not linked'}</span>
                 </div>
               </div>
             </div>
@@ -5304,8 +5549,8 @@ const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({ trans
                         <span className="payment-date">{payment.paymentDate}</span>
                       </div>
                       <div className="payment-details">
-                        <span>Method: {payment.paymentMethod.replace('_', ' ').toUpperCase()}</span>
-                        <span>Received by: {payment.receivedBy}</span>
+                        <span>Method: {payment.paymentMethod ? payment.paymentMethod.replace('_', ' ').toUpperCase() : 'N/A'}</span>
+                        <span>Received by: {payment.receivedBy || 'N/A'}</span>
                       </div>
                       {payment.notes && (
                         <div className="payment-notes">{payment.notes}</div>
@@ -5502,8 +5747,8 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({ transaction, customers, inv
     make: transaction.vehicleDetails.brand,
     model: transaction.vehicleDetails.model,
     yearOfManufacture: transaction.vehicleDetails.year,
-    chassisNo: vehicle?.vin || vehicle?.registrationNo || 'N/A',
-    engineNo: vehicle?.engineSize || 'N/A',
+    chassisNo: vehicle?.chassisNo || vehicle?.registrationNo || 'N/A',
+    engineNo: vehicle?.engineNo || vehicle?.engineSize || 'N/A',
     fuelType: vehicle?.fuelType?.toUpperCase() || 'PETROL',
     colour: transaction.vehicleDetails.color.toUpperCase(),
     countryOfOrigin: 'JAPAN',

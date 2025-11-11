@@ -24,11 +24,12 @@ interface VehicleOrder {
   };
   currency: 'USD' | 'JPY' | 'EUR' | 'GBP' | 'LKR';
   supplier?: string;
-  vehicleNumber?: string;
+  chassisNo?: string;
   lcAmount?: number;
+  lcNumber?: string;
   lcBank?: string;
-  vinNumber?: string;
-  licensePlateNumber?: string;
+  grade?: string;
+  biNumber?: string;
   customBasicInfo?: { [key: string]: string };
 }
 
@@ -252,11 +253,11 @@ const Billing: React.FC<BillingProps> = ({
         bankName: order.lcBank || 'Hatton National Bank (HNB)',
         bankBranch: 'Kalawanchikudy',
         // Vehicle Details
-        vehicleRegisteredNo: order.vehicleNumber || order.licensePlateNumber || '',
+        vehicleRegisteredNo: order.biNumber || '',
         make: order.model.split(' ')[0] || 'N/A',
         model: order.model,
         yearOfManufacture: order.year,
-        chassisNo: order.vinNumber || 'N/A',
+        chassisNo: order.chassisNo || 'N/A',
         engineNo: order.customBasicInfo?.['Engine No'] || 'N/A',
         fuelType: order.customBasicInfo?.['Fuel Type']?.toUpperCase() || 'PETROL',
         colour: order.customBasicInfo?.['Color']?.toUpperCase() || 'N/A',
