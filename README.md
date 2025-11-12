@@ -1,4 +1,4 @@
-# Moder Car Sale - Advanced Accounting System
+# Modern Car Sale - Advanced Accounting System
 
 <div align="center">
 
@@ -227,7 +227,7 @@ Contact NextWave Tech Labs today to discuss your software development needs. We 
 
 ## 📄 License
 
-This project is proprietary software developed by **NextWave Tech Labs** for **Moder Car Sale**.  
+This project is proprietary software developed by **NextWave Tech Labs** for **Modern Car Sale**.  
 Unauthorized copying, modification, or distribution is strictly prohibited.
 
 ---

@@ -63,6 +63,8 @@ interface Transaction {
     year: number;
     color: string;
     vin?: string;
+    chassisNo?: string;
+    engineNo?: string;
     licensePlate?: string;
   };
   pricing: {
@@ -84,6 +86,7 @@ interface Transaction {
 interface Customer {
   id: string;
   name: string;
+  title?: 'Mr.' | 'Mrs.' | 'Ms.' | 'Miss' | 'Dr.';
   contact: string;
   email?: string;
   address?: string;
@@ -97,6 +100,8 @@ interface InventoryItem {
   year: number;
   color: string;
   vin?: string;
+  chassisNo?: string;
+  engineNo?: string;
   licensePlate?: string;
   fuelType: 'gasoline' | 'diesel' | 'hybrid' | 'electric';
   engineSize?: string;
@@ -124,7 +129,10 @@ const Billing: React.FC<BillingProps> = ({
   const [showInvoice, setShowInvoice] = useState(false);
 
   const getCustomerById = (customerId: string): Customer | undefined => {
-    return customers.find(c => c.id === customerId);
+    const customer = customers.find(c => c.id === customerId);
+    console.log('📋 Getting customer for invoice:', customer);
+    console.log('📋 Customer title:', customer?.title);
+    return customer;
   };
 
   const getInventoryById = (vehicleId: string): InventoryItem | undefined => {
@@ -166,6 +174,22 @@ const Billing: React.FC<BillingProps> = ({
       const customer = getCustomerById(transaction.customerId);
       const vehicle = transaction.vehicleId ? getInventoryById(transaction.vehicleId) : undefined;
 
+      console.log('═══════════════════════════════════════');
+      console.log('🔍 INVOICE DATA DEBUG');
+      console.log('═══════════════════════════════════════');
+      console.log('📄 Transaction:', transaction);
+      console.log('👤 Customer:', customer);
+      console.log('   - Title:', customer?.title);
+      console.log('🚗 Vehicle:', vehicle);
+      console.log('   - Chassis (vehicle.chassisNo):', vehicle?.chassisNo);
+      console.log('   - Engine (vehicle.engineNo):', vehicle?.engineNo);
+      console.log('   - VIN (vehicle.vin):', vehicle?.vin);
+      console.log('🚗 Transaction Vehicle Details:', transaction.vehicleDetails);
+      console.log('   - Chassis (transaction.vehicleDetails.chassisNo):', transaction.vehicleDetails.chassisNo);
+      console.log('   - Engine (transaction.vehicleDetails.engineNo):', transaction.vehicleDetails.engineNo);
+      console.log('   - VIN (transaction.vehicleDetails.vin):', transaction.vehicleDetails.vin);
+      console.log('═══════════════════════════════════════');
+
       const isLeasing = transaction.payments?.some(p => p.paymentMethod === 'leasing') || transaction.isLeasing || false;
       const hasBank = isLeasing || invoiceType === 'bank';
 
@@ -178,6 +202,7 @@ const Billing: React.FC<BillingProps> = ({
         }),
         // Customer Info
         customerName: customer?.name || 'Unknown Customer',
+        customerTitle: customer?.title || (console.log('⚠️ No title for customer:', customer), 'Mr.'),
         customerAddress: customer?.address || 'N/A',
         customerContact: customer?.contact || 'N/A',
         customerNIC: customer?.nic || 'N/A',
@@ -189,8 +214,8 @@ const Billing: React.FC<BillingProps> = ({
         make: transaction.vehicleDetails.brand,
         model: transaction.vehicleDetails.model,
         yearOfManufacture: transaction.vehicleDetails.year,
-        chassisNo: vehicle?.vin || transaction.vehicleDetails.vin || 'N/A',
-        engineNo: vehicle?.engineSize || 'N/A',
+        chassisNo: vehicle?.chassisNo || vehicle?.vin || transaction.vehicleDetails.chassisNo || transaction.vehicleDetails.vin || 'N/A',
+        engineNo: vehicle?.engineNo || transaction.vehicleDetails.engineNo || 'N/A',
         fuelType: vehicle?.fuelType?.toUpperCase() || 'PETROL',
         colour: transaction.vehicleDetails.color.toUpperCase(),
         countryOfOrigin: 'JAPAN',
@@ -207,6 +232,7 @@ const Billing: React.FC<BillingProps> = ({
         balanceAmount: transaction.balanceRemaining,
         // Delivery Info (for bank invoice)
         deliverToName: customer?.name || 'Unknown Customer',
+        deliverToTitle: customer?.title || (console.log('⚠️ No title for bank invoice customer:', customer), 'Mr.'),
         deliverToAddress: customer?.address || 'N/A',
         deliverToNIC: customer?.nic || 'N/A',
         // Payment Info
@@ -246,6 +272,7 @@ const Billing: React.FC<BillingProps> = ({
         }),
         // Customer Info (need to be added to order if available)
         customerName: 'Customer Name',
+        customerTitle: 'Mr.',
         customerAddress: 'Customer Address',
         customerContact: 'Contact Number',
         customerNIC: 'NIC Number',
@@ -279,6 +306,7 @@ const Billing: React.FC<BillingProps> = ({
         balanceAmount: order.totalCost,
         // Delivery Info (for bank invoice)
         deliverToName: 'Customer Name',
+        deliverToTitle: 'Mr.',
         deliverToAddress: 'Customer Address',
         deliverToNIC: 'NIC Number',
         // Payment Info

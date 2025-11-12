@@ -1,5 +1,5 @@
 // API configuration and utilities
-const API_BASE_URL = 'https://carsale-backend-1.onrender.com/api';
+const API_BASE_URL = 'http://localhost:5000/api'; // Changed to local backend for testing
 
 // Helper to get auth token from localStorage
 export const getAuthToken = (): string | null => {
@@ -233,6 +233,7 @@ export interface VehicleOrder {
     model: string;
     year: number;
     color: string;
+    engineNo?: string;
     specifications?: string;
   };
   pricing: {
@@ -253,6 +254,9 @@ export interface VehicleOrder {
     status: string;
     description: string;
   }[];
+  movedToInventory?: boolean;
+  inventoryItemId?: string;
+  movedToInventoryDate?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -307,12 +311,22 @@ export const vehicleOrderAPI = {
       method: 'DELETE',
     });
   },
+
+  moveToInventory: async (id: string): Promise<{ message: string; order: VehicleOrder; inventoryItem: InventoryItem }> => {
+    return await apiCall<{ message: string; order: VehicleOrder; inventoryItem: InventoryItem }>(
+      `/vehicle-orders/${id}/move-to-inventory`,
+      {
+        method: 'POST',
+      }
+    );
+  },
 };
 
 // Customer API
 export interface Customer {
   _id?: string;
   name: string;
+  title?: 'Mr.' | 'Mrs.' | 'Ms.' | 'Miss' | 'Dr.';
   contact: string;
   email?: string;
   address?: string;
@@ -377,7 +391,9 @@ export interface InventoryItem {
   brand: string;
   year: number;
   color: string;
-  vin?: string;
+  vin?: string; // Chassis Number
+  chassisNo?: string; // Alternative Chassis Number field
+  engineNo?: string; // Engine Number
   licensePlate?: string;
   fuelType: 'gasoline' | 'diesel' | 'hybrid' | 'electric';
   engineSize?: string;

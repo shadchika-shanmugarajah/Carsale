@@ -48,6 +48,7 @@ interface VehicleOrder {
   depreciation?: number;
   // LC and Additional fields
   chassisNo?: string;
+  engineNo?: string;
   lcAmount?: number;
   lcNumber?: string;
   lcBank?: string;
@@ -137,6 +138,7 @@ interface Customer {
   _id?: string;
   id: string;
   name: string;
+  title?: 'Mr.' | 'Mrs.' | 'Ms.' | 'Miss' | 'Dr.';
   contact: string;
   email?: string;
   address?: string;
@@ -272,6 +274,7 @@ interface VehicleOrderFormData {
   paymentMethod: string;
   // New fields
   chassisNo: string;
+  engineNo: string;
   lcAmount: number;
   lcNumber: string;
   lcBank: string;
@@ -363,19 +366,28 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
         totalCost: order.pricing?.totalAmount || 0,
         expenses: {
           vehicleCost: order.pricing?.vehiclePrice || 0,
-          fuel: 0,
-          duty: order.pricing?.taxes || 0,
-          driverCharge: 0,
-          clearanceCharge: order.pricing?.fees || 0,
-          demurrage: 0,
-          tax: 0,
-          customExpenses: {}
+          fuel: order.expenses?.fuel || 0,
+          duty: order.expenses?.duty || 0,
+          driverCharge: order.expenses?.driverCharge || 0,
+          clearanceCharge: order.expenses?.clearanceCharge || 0,
+          demurrage: order.expenses?.demurrage || 0,
+          tax: order.expenses?.tax || 0,
+          customExpenses: order.expenses?.customExpenses || {}
         },
         currency: 'USD',
         supplier: order.supplier || 'N/A',
         expectedDelivery: order.expectedArrivalDate ? new Date(order.expectedArrivalDate).toISOString().split('T')[0] : '',
         paymentMethod: order.paymentMethod || 'N/A',
         notes: order.notes || '',
+        chassisNo: order.vehicleDetails?.chassisNo,
+        engineNo: order.vehicleDetails?.engineNo,
+        lcAmount: order.lcAmount,
+        lcNumber: order.lcNumber,
+        lcBank: order.lcBank,
+        grade: order.grade,
+        biNumber: order.biNumber,
+        customBasicInfo: order.customBasicInfo,
+        additionalInfo: order.additionalInfo,
         customerInfo: {
           name: order.customerName || '',
           contact: order.customerContact || '',
@@ -395,6 +407,10 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
       setIsLoadingInventory(true);
       const response = await inventoryAPI.getAll({ limit: 1000 });
       console.log('Loaded inventory:', response.items.length, 'items');
+      console.log('🔍 CHECKING CHASSIS/ENGINE IN API RESPONSE:');
+      response.items.forEach((item: any) => {
+        console.log(`  - ${item.brand} ${item.model}: chassisNo=${item.chassisNo}, engineNo=${item.engineNo}`);
+      });
       console.log('Inventory statuses:', response.items.map((i: any) => ({ id: i._id, brand: i.brand, model: i.model, status: i.status })));
       // Map API data to Dashboard format with defaults for missing fields
       const mappedItems = response.items.map((item: any) => ({
@@ -553,6 +569,8 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
       console.log('=== INVENTORY UPDATE DEBUG ===');
       console.log('Item ID:', id);
       console.log('Raw form data:', itemData);
+      console.log('🔑 chassisNo from form:', itemData.chassisNo, 'type:', typeof itemData.chassisNo);
+      console.log('🔑 engineNo from form:', itemData.engineNo, 'type:', typeof itemData.engineNo);
       
       // Map frontend data to backend model format - EXACT same as create
       const backendData = {
@@ -578,17 +596,23 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
       };
       
       console.log('Sending to backend:', JSON.stringify(backendData, null, 2));
+      console.log('🔑 chassisNo sending:', backendData.chassisNo);
+      console.log('🔑 engineNo sending:', backendData.engineNo);
       console.log('Field types:', {
         model: typeof backendData.model,
         brand: typeof backendData.brand,
         year: typeof backendData.year,
         color: typeof backendData.color,
         fuelType: typeof backendData.fuelType,
-        purchasePrice: typeof backendData.purchasePrice
+        purchasePrice: typeof backendData.purchasePrice,
+        chassisNo: typeof backendData.chassisNo,
+        engineNo: typeof backendData.engineNo
       });
       
       const result = await inventoryAPI.update(id, backendData);
       console.log('✅ Update successful, result:', result);
+      console.log('✅ Result chassisNo:', result.item?.chassisNo);
+      console.log('✅ Result engineNo:', result.item?.engineNo);
       
       await loadInventory(); // Refresh list
       alert('✅ Inventory item updated successfully!');
@@ -669,46 +693,50 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
   const [expenseDateFilter, setExpenseDateFilter] = useState<'all' | 'today' | 'week' | 'month' | 'custom'>('all');
   const [customDateRange, setCustomDateRange] = useState({ start: '', end: '' });
 
-  // Handler to move order to inventory
+  // Handler to move order to inventory - with duplicate prevention
   const handleMoveOrderToInventory = async (order: any) => {
     try {
       console.log('=== MOVING ORDER TO INVENTORY ===');
       console.log('Order:', order);
       
-      // Create inventory item from order data
-      const inventoryData = {
-        model: order.vehicleDetails.model,
-        brand: order.vehicleDetails.brand,
-        year: Number(order.vehicleDetails.year) || new Date().getFullYear(),
-        color: order.vehicleDetails.color,
-        chassisNo: order.vehicleDetails.chassisNo || undefined,
-        engineNo: order.vehicleDetails.engineNo || undefined,
-        grade: order.vehicleDetails.grade || undefined,
-        licensePlate: undefined,
-        fuelType: order.vehicleDetails.fuelType || 'gasoline',
-        engineSize: order.vehicleDetails.engineSize || undefined,
-        transmission: order.vehicleDetails.transmission || 'automatic',
-        mileage: 0,
-        purchasePrice: Number(order.pricing.totalAmount) || 0,
-        sellingPrice: Number(order.pricing.totalAmount * 1.15) || undefined, // 15% markup
-        currency: order.currency || 'LKR',
-        status: 'available' as const,
-        location: 'Showroom',
-        notes: `Arrived from customer order: ${order.orderNumber}`,
-        images: []
-      };
+      // Check if already moved to inventory
+      if (order.movedToInventory) {
+        alert('⚠️ This vehicle has already been moved to inventory!');
+        return;
+      }
+
+      // Validate order status
+      if (order.orderStatus !== 'arrived') {
+        alert('⚠️ Vehicle must be in "arrived" status before moving to inventory!');
+        return;
+      }
       
-      console.log('Creating inventory item:', inventoryData);
-      
-      // Save to database
-      await handleSaveInventoryItem(inventoryData);
+      const orderId = order._id || order.id;
+      if (!orderId) {
+        throw new Error('Order ID not found');
+      }
+
+      // Use the secure API endpoint that prevents duplicates
+      const response = await vehicleOrderAPI.moveToInventory(orderId);
       
       console.log('✅ Vehicle successfully moved to inventory');
-      alert('✅ Vehicle moved to inventory successfully!');
+      console.log('Inventory Item ID:', response.inventoryItem._id);
+      
+      alert(`✅ Vehicle moved to inventory successfully!\n\nInventory Item ID: ${response.inventoryItem._id}`);
+      
+      // The order status will be automatically updated to 'delivered' by the backend
       
     } catch (error: any) {
       console.error('❌ Error moving order to inventory:', error);
-      alert(`❌ Failed to move to inventory: ${error.message}`);
+      
+      // Handle specific error cases
+      if (error.data?.alreadyMoved) {
+        alert(`⚠️ This vehicle has already been moved to inventory!\n\nMoved on: ${new Date(error.data.movedDate).toLocaleDateString()}\nInventory Item ID: ${error.data.inventoryItemId}`);
+      } else if (error.data?.currentStatus) {
+        alert(`⚠️ Cannot move to inventory.\n\nCurrent status: ${error.data.currentStatus}\nRequired status: arrived`);
+      } else {
+        alert(`❌ Failed to move to inventory: ${error.message}`);
+      }
     }
   };
   
@@ -1354,6 +1382,8 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
           model: formData.model,
           year: formData.year || new Date().getFullYear(),
           color: 'N/A',
+          chassisNo: formData.chassisNo || undefined,
+          engineNo: formData.engineNo || undefined,
           specifications: formData.notes || ''
         },
         pricing: {
@@ -1362,11 +1392,28 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
           fees: Number(totalFees) || 0,
           totalAmount: Number(totalCost) || 0
         },
+        expenses: {
+          fuel: Number(fuel) || 0,
+          duty: Number(duty) || 0,
+          driverCharge: Number(driverCharge) || 0,
+          clearanceCharge: Number(clearanceCharge) || 0,
+          demurrage: Number(demurrage) || 0,
+          tax: Number(tax) || 0,
+          customExpenses: formData.expenses.customExpenses || {}
+        },
         advancePayment: 0,
         balanceAmount: Number(totalCost) || 0,
         orderStatus: 'pending' as const,
         expectedArrivalDate: formData.expectedDelivery || undefined,
         notes: formData.notes || '',
+        // LC Information
+        lcAmount: formData.lcAmount || undefined,
+        lcNumber: formData.lcNumber || undefined,
+        lcBank: formData.lcBank || undefined,
+        // Basic Information
+        grade: formData.grade || undefined,
+        biNumber: formData.biNumber || undefined,
+        customBasicInfo: Object.keys(formData.customBasicInfo || {}).length > 0 ? formData.customBasicInfo : undefined,
         timeline: [{
           date: new Date().toISOString().split('T')[0],
           status: 'Order Placed',
@@ -1415,6 +1462,7 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
       notes: formData.notes,
       // New fields
       chassisNo: formData.chassisNo || undefined,
+      engineNo: formData.engineNo || undefined,
       lcAmount: formData.lcAmount || undefined,
       lcNumber: formData.lcNumber || undefined,
       lcBank: formData.lcBank || undefined,
@@ -1550,51 +1598,60 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
     return model.split(' ')[0]; // Fallback to first word
   };
 
-  // Convert Vehicle Order to Inventory Item
-  const handleAddOrderToInventory = (order: VehicleOrder) => {
+  // Convert Vehicle Order to Inventory Item - NOW SAVES TO DATABASE!
+  const handleAddOrderToInventory = async (order: VehicleOrder) => {
     if (order.status !== 'completed') {
-      alert('Vehicle must be completed before adding to inventory');
+      alert('⚠️ Vehicle must be completed before adding to inventory');
       return;
     }
 
-    const newInventoryItem: InventoryItem = {
-      id: `INV${String(inventoryItems.length + 1).padStart(3, '0')}`,
-      model: order.model,
-      brand: extractBrandFromModel(order.model),
-      year: order.year,
-      color: 'To Be Determined', // Default value, user can edit later
-      mileage: 0, // New vehicle assumption
-      condition: 'excellent', // New vehicle assumption  
-      purchasePrice: order.totalCost,
-      marketValue: order.totalCost * 1.15, // 15% markup assumption
-      sellingPrice: order.totalCost * 1.20, // 20% markup assumption
-      currency: order.currency,
-      location: 'Dubai Showroom A', // Default location
-      status: 'available',
-      dateAdded: new Date().toISOString().split('T')[0],
-      lastUpdated: new Date().toISOString().split('T')[0],
-      features: [],
-      fuelType: 'gasoline', // Default, can be edited
-      transmission: 'automatic', // Default, can be edited
-      bodyType: 'sedan', // Default, can be edited
-      supplier: order.supplier,
-      purchaseDate: order.orderDate,
-      notes: `🚛 Converted from order ${order.id} on ${new Date().toLocaleDateString()}. Original order notes: ${order.notes || 'None'}`,
-    };
-    
-    // Add to inventory
-    setInventoryItems([...inventoryItems, newInventoryItem]);
-    
-    // Update order notes to indicate it's been added to inventory
-    setVehicleOrders(vehicleOrders.map(o => 
-      o.id === order.id ? { 
-        ...o, 
-        notes: `${o.notes || ''}\n📦 Added to inventory as ${newInventoryItem.id} on ${new Date().toLocaleDateString()}` 
-      } : o
-    ));
-    
-    alert(`✅ Successfully added ${order.model} to inventory!\n\nInventory ID: ${newInventoryItem.id}\nYou can now edit the vehicle details in the Inventory tab.`);
-    onTabChange('inventory'); // Switch to inventory tab
+    if (!window.confirm(`📦 Move ${order.model} to inventory?\n\nThis will:\n- Create inventory item in database\n- Mark order as moved\n- Vehicle will be available for sale`)) {
+      return;
+    }
+
+    try {
+      // Prepare data for backend API
+      const inventoryData = {
+        model: order.model,
+        brand: extractBrandFromModel(order.model),
+        year: order.year,
+        color: 'To Be Determined', // Can be edited later
+        fuelType: 'gasoline', // Required field, default value
+        purchasePrice: order.totalCost,
+        sellingPrice: order.totalCost * 1.20, // 20% markup
+        currency: order.currency || 'USD',
+        status: 'available',
+        location: 'Showroom',
+        notes: `🚛 Converted from import order ${order.id} on ${new Date().toLocaleDateString()}. ${order.notes || ''}`,
+        mileage: 0,
+        chassisNo: order.chassisNo,
+        engineNo: order.engineNo,
+        transmission: 'automatic', // Default
+      };
+
+      console.log('💾 Saving to database:', inventoryData);
+      
+      // ✅ SAVE TO DATABASE using existing API function
+      await handleSaveInventoryItem(inventoryData);
+      
+      // Update local order to mark it as moved
+      setVehicleOrders(vehicleOrders.map(o => 
+        o.id === order.id ? { 
+          ...o, 
+          notes: `${o.notes || ''}\n📦 Moved to inventory on ${new Date().toLocaleDateString()}` 
+        } : o
+      ));
+      
+      // Reload inventory to show new item
+      await loadInventory();
+      
+      alert(`✅ Successfully saved ${order.model} to inventory database!\n\nVehicle is now available for sale in Inventory tab.`);
+      onTabChange('inventory'); // Switch to inventory tab
+      
+    } catch (error: any) {
+      console.error('❌ Error saving to inventory:', error);
+      alert(`❌ Failed to save to inventory: ${error.message || 'Unknown error'}\n\nPlease try again.`);
+    }
   };
 
   const checkIfOrderInInventory = (orderId: string) => {
@@ -1846,6 +1903,7 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
 
   const handleCreateReservation = async (inventoryId: string, customerData: {
     name: string;
+    title?: 'Mr.' | 'Mrs.' | 'Ms.' | 'Miss' | 'Dr.';
     contact: string;
     email?: string;
     address?: string;
@@ -1875,6 +1933,7 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
         console.log('Creating new customer with data:', customerData);
         const customerResponse = await customerAPI.create({
           name: customerData.name,
+          title: customerData.title || 'Mr.',
           contact: customerData.contact,
           email: customerData.email || '',
           address: customerData.address || '',
@@ -1884,9 +1943,29 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
         customer = {
           id: customerResponse.customer._id || '',
           _id: customerResponse.customer._id || '',
-          ...customerData
+          name: customerData.name,
+          title: customerData.title || 'Mr.',
+          contact: customerData.contact,
+          email: customerData.email,
+          address: customerData.address,
+          nic: customerData.nic || customerData.idNumber || ''
         };
         await loadCustomers(); // Refresh customer list
+        console.log('✅ Customer saved with title:', customer.title);
+      } else {
+        // Update existing customer with new title if provided
+        console.log('Updating existing customer title:', customerData.title);
+        if (customerData.title && customerData.title !== customer.title) {
+          const updatedResponse = await customerAPI.update(customer.id || customer._id || '', {
+            title: customerData.title
+          });
+          console.log('✅ Customer title updated:', updatedResponse.customer.title);
+          customer = {
+            ...customer,
+            title: customerData.title
+          };
+          await loadCustomers(); // Refresh customer list
+        }
       }
       
       console.log('Using customer with ID:', customer?.id || customer?._id);
@@ -1919,7 +1998,11 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
           model: vehicle.model,
           year: vehicle.year,
           color: vehicle.color,
-          registrationNo: vehicle.registrationNo || undefined
+          vin: vehicle.chassisNo || undefined,
+          chassisNo: vehicle.chassisNo || undefined,
+          engineNo: vehicle.engineNo || undefined,
+          registrationNo: vehicle.registrationNo || undefined,
+          licensePlate: vehicle.licensePlate || undefined
         },
         pricing: {
           vehiclePrice: Number(parseFloat(pricingData.vehiclePrice as any) || 0),
@@ -3062,7 +3145,13 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
                           <div className="action-buttons-cell">
                             <button 
                               className="btn btn-info btn-sm" 
-                              onClick={() => setInventoryDetailsModal(item)}
+                              onClick={() => {
+                                console.log('🔍 VIEW DETAILS CLICKED');
+                                console.log('📦 Item data:', item);
+                                console.log('🔑 chassisNo:', item.chassisNo);
+                                console.log('🔑 engineNo:', item.engineNo);
+                                setInventoryDetailsModal(item);
+                              }}
                               title="View Details"
                             >
                               👁️
@@ -3171,6 +3260,7 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
             paymentMethod: editingOrder.paymentMethod || 'Bank Transfer',
             // New fields
             chassisNo: editingOrder.chassisNo || '',
+            engineNo: editingOrder.engineNo || '',
             lcAmount: editingOrder.lcAmount || 0,
             lcNumber: editingOrder.lcNumber || '',
             lcBank: editingOrder.lcBank || '',
@@ -3334,7 +3424,7 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
                 )}
 
                 {/* Vehicle Details */}
-                {(orderDetailsModal.chassisNo || orderDetailsModal.additionalInfo) && (
+                {(orderDetailsModal.chassisNo || orderDetailsModal.engineNo || orderDetailsModal.additionalInfo) && (
                   <div className="detail-section">
                     <h3>Vehicle Details</h3>
                     <div className="detail-grid">
@@ -3342,6 +3432,12 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
                         <div className="detail-item">
                           <label>Chassis No:</label>
                           <span>{orderDetailsModal.chassisNo}</span>
+                        </div>
+                      )}
+                      {orderDetailsModal.engineNo && (
+                        <div className="detail-item">
+                          <label>Engine No:</label>
+                          <span>{orderDetailsModal.engineNo}</span>
                         </div>
                       )}
                     </div>
@@ -3357,7 +3453,7 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
                 )}
 
                 {/* LC Information */}
-                {(orderDetailsModal.lcAmount || orderDetailsModal.lcBank) && (
+                {(orderDetailsModal.lcAmount || orderDetailsModal.lcNumber || orderDetailsModal.lcBank) && (
                   <div className="detail-section">
                     <h3>💰 Letter of Credit (LC) Information</h3>
                     <div className="detail-grid">
@@ -3365,6 +3461,12 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
                         <div className="detail-item">
                           <label>LC Amount:</label>
                           <span>{formatCurrency(orderDetailsModal.lcAmount, orderDetailsModal.currency)}</span>
+                        </div>
+                      )}
+                      {orderDetailsModal.lcNumber && (
+                        <div className="detail-item">
+                          <label>LC Number:</label>
+                          <span>{orderDetailsModal.lcNumber}</span>
                         </div>
                       )}
                       {orderDetailsModal.lcBank && (
@@ -3802,7 +3904,7 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, onTabChange }) => {
                       <strong>Company Name</strong>
                       <p style={{ margin: '0.3rem 0 0 0', color: '#7f8c8d', fontSize: '0.9rem' }}>Display name for the system</p>
                     </div>
-                    <span style={{ color: '#667eea', fontWeight: '600' }}>Moder Car Sale</span>
+                    <span style={{ color: '#667eea', fontWeight: '600' }}>Modern Car Sale</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'white', borderRadius: '8px' }}>
                     <div>
@@ -4612,6 +4714,7 @@ interface TransactionFormProps {
   leasingCompanies: LeasingCompany[];
   onSubmit: (inventoryId: string, customerData: {
     name: string;
+    title?: 'Mr.' | 'Mrs.' | 'Ms.' | 'Miss' | 'Dr.';
     contact: string;
     email?: string;
     address?: string;
@@ -4643,6 +4746,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ inventoryItems, custo
   const [selectedCurrency, setSelectedCurrency] = useState<string>('LKR');
   const [customerData, setCustomerData] = useState({
     name: '',
+    title: 'Mr.' as 'Mr.' | 'Mrs.' | 'Ms.' | 'Miss' | 'Dr.',
     contact: '',
     email: '',
     address: '',
@@ -4859,6 +4963,21 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ inventoryItems, custo
             <div className="form-section">
               <h3>👤 Customer Information</h3>
               <div className="form-grid">
+                <div className="form-group">
+                  <label className="form-label">Title *</label>
+                  <select
+                    value={customerData.title}
+                    onChange={(e) => setCustomerData(prev => ({ ...prev, title: e.target.value as any }))}
+                    className="form-input"
+                    required
+                  >
+                    <option value="Mr.">Mr.</option>
+                    <option value="Mrs.">Mrs.</option>
+                    <option value="Ms.">Ms.</option>
+                    <option value="Miss">Miss</option>
+                    <option value="Dr.">Dr.</option>
+                  </select>
+                </div>
                 <div className="form-group">
                   <label className="form-label">Customer Name *</label>
                   <input
@@ -5167,47 +5286,6 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ inventoryItems, custo
                       style={{backgroundColor: '#f8f9fa'}}
                     />
                   </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Tenure (Months)</label>
-                    <input
-                      type="number"
-                      value={leasingData.tenure}
-                      onChange={(e) => handleLeasingDataChange('tenure', parseFloat(e.target.value) || 48)}
-                      onWheel={(e) => e.currentTarget.blur()}
-                      className="form-input"
-                      min="12"
-                      max="84"
-                      placeholder="48"
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Interest Rate (%)</label>
-                    <input
-                      type="number"
-                      value={leasingData.interestRate}
-                      onChange={(e) => handleLeasingDataChange('interestRate', parseFloat(e.target.value) || 12.5)}
-                      onWheel={(e) => e.currentTarget.blur()}
-                      className="form-input"
-                      min="1"
-                      max="30"
-                      step="any"
-                      placeholder="12.5"
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Monthly Installment (Customer → Company)</label>
-                    <input
-                      type="number"
-                      value={leasingData.monthlyInstallment}
-                      onWheel={(e) => e.currentTarget.blur()}
-                      className="form-input"
-                      readOnly
-                      style={{backgroundColor: '#f8f9fa'}}
-                    />
-                  </div>
                 </div>
 
                 {/* Leasing Summary */}
@@ -5217,7 +5295,6 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ inventoryItems, custo
                     <p><strong>Shop Receives:</strong> ${(leasingData.downPayment + leasingData.leasingAmount).toLocaleString()} (Down Payment + Leasing Amount)</p>
                     <p><strong>Customer Pays Shop:</strong> ${leasingData.downPayment.toLocaleString()} (Today)</p>
                     <p><strong>Leasing Company Pays Shop:</strong> ${leasingData.leasingAmount.toLocaleString()}</p>
-                    <p><strong>Customer Pays Leasing Company:</strong> ${leasingData.monthlyInstallment.toLocaleString()}/month for {leasingData.tenure} months</p>
                   </div>
                 </div>
               </div>
@@ -5726,6 +5803,19 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({ transaction, customers, inv
   // Use the passed invoiceType instead of auto-detecting
   const isLeasing = invoiceType === 'bank';
   
+  console.log('═══════════════════════════════════════');
+  console.log('🔍 DASHBOARD INVOICE DATA DEBUG');
+  console.log('═══════════════════════════════════════');
+  console.log('👤 Customer:', customer);
+  console.log('   - Title:', customer?.title);
+  console.log('🚗 Vehicle:', vehicle);
+  console.log('   - Chassis (vehicle.chassisNo):', vehicle?.chassisNo);
+  console.log('   - Engine (vehicle.engineNo):', vehicle?.engineNo);
+  console.log('🚗 Transaction Vehicle Details:', transaction.vehicleDetails);
+  console.log('   - Chassis (transaction.vehicleDetails.chassisNo):', (transaction.vehicleDetails as any)?.chassisNo);
+  console.log('   - Engine (transaction.vehicleDetails.engineNo):', (transaction.vehicleDetails as any)?.engineNo);
+  console.log('═══════════════════════════════════════');
+
   // Prepare invoice data
   const invoiceData = {
     invoiceNumber: transaction.invoiceNumber || `INV-${transaction.id}`,
@@ -5736,6 +5826,7 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({ transaction, customers, inv
     }),
     // Customer Info
     customerName: customer?.name || 'Unknown Customer',
+    customerTitle: customer?.title || 'Mr.',
     customerAddress: customer?.address || 'N/A',
     customerContact: customer?.contact || 'N/A',
     customerNIC: customer?.nic || 'N/A',
@@ -5747,8 +5838,8 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({ transaction, customers, inv
     make: transaction.vehicleDetails.brand,
     model: transaction.vehicleDetails.model,
     yearOfManufacture: transaction.vehicleDetails.year,
-    chassisNo: vehicle?.chassisNo || vehicle?.registrationNo || 'N/A',
-    engineNo: vehicle?.engineNo || vehicle?.engineSize || 'N/A',
+    chassisNo: vehicle?.chassisNo || (transaction.vehicleDetails as any)?.chassisNo || (transaction.vehicleDetails as any)?.vin || 'N/A',
+    engineNo: vehicle?.engineNo || (transaction.vehicleDetails as any)?.engineNo || 'N/A',
     fuelType: vehicle?.fuelType?.toUpperCase() || 'PETROL',
     colour: transaction.vehicleDetails.color.toUpperCase(),
     countryOfOrigin: 'JAPAN',
@@ -5765,6 +5856,7 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({ transaction, customers, inv
     balanceAmount: transaction.balanceRemaining,
     // Delivery Info (for bank invoice)
     deliverToName: customer?.name || 'Unknown Customer',
+    deliverToTitle: customer?.title || 'Mr.',
     deliverToAddress: customer?.address || 'N/A',
     deliverToNIC: customer?.nic || 'N/A',
     // Payment Info

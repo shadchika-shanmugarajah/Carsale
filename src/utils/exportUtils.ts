@@ -105,14 +105,17 @@ export const exportToExcel = (
 
 // Export to PDF
 export const exportToPDF = (
-  data: Transaction[] | Expense[],
+  data: Transaction[] | Expense[] | any[],
   filename: string,
-  reportType: 'sales' | 'expenses' | 'profit' | 'transactions',
+  reportType: 'sales' | 'expenses' | 'profit' | 'transactions' | 'inventory' | 'customers' | 'financial' | 'performance',
   summary?: {
     totalRevenue?: number;
     totalExpenses?: number;
     totalProfit?: number;
     count?: number;
+    totalItems?: number;
+    totalValue?: number;
+    totalCustomers?: number;
   }
 ) => {
   // Create HTML content for PDF
@@ -123,10 +126,16 @@ export const exportToPDF = (
       <meta charset="UTF-8">
       <title>${filename}</title>
       <style>
+        @page {
+          size: A4;
+          margin: 20mm;
+        }
         body {
           font-family: Arial, sans-serif;
-          margin: 20px;
+          margin: 0;
+          padding: 20px;
           color: #333;
+          background: white;
         }
         .header {
           text-align: center;
@@ -140,8 +149,9 @@ export const exportToPDF = (
           font-size: 28px;
         }
         .header p {
-          color: #666;
+          color: #333;
           margin: 5px 0;
+          font-weight: 500;
         }
         .summary {
           background: #f8f9fa;
@@ -204,7 +214,7 @@ export const exportToPDF = (
     </head>
     <body>
       <div class="header">
-        <h1>🚗 Moder Car Sale</h1>
+        <h1>🚗 Modern Car Sale</h1>
         <p>${reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report</p>
         <p>Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
       </div>
@@ -242,6 +252,30 @@ export const exportToPDF = (
         <div class="summary-item">
           <h3>${summary.count}</h3>
           <p>Total Records</p>
+        </div>
+      `;
+    }
+    if ((summary as any).totalItems !== undefined) {
+      htmlContent += `
+        <div class="summary-item">
+          <h3>${(summary as any).totalItems}</h3>
+          <p>Total Items</p>
+        </div>
+      `;
+    }
+    if ((summary as any).totalValue !== undefined) {
+      htmlContent += `
+        <div class="summary-item">
+          <h3>${formatCurrency((summary as any).totalValue)}</h3>
+          <p>Total Value</p>
+        </div>
+      `;
+    }
+    if ((summary as any).totalCustomers !== undefined) {
+      htmlContent += `
+        <div class="summary-item">
+          <h3>${(summary as any).totalCustomers}</h3>
+          <p>Total Customers</p>
         </div>
       `;
     }
@@ -330,11 +364,126 @@ export const exportToPDF = (
         </tbody>
       </table>
     `;
+  } else if (reportType === 'inventory') {
+    htmlContent += `
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Brand</th>
+            <th>Model</th>
+            <th>Year</th>
+            <th>Color</th>
+            <th>Status</th>
+            <th class="text-right">Price</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    let totalValue = 0;
+    (data as any[]).forEach(item => {
+      totalValue += item.price || item.sellingPrice || item.purchasePrice || 0;
+      
+      htmlContent += `
+        <tr>
+          <td>${item.id || item._id || 'N/A'}</td>
+          <td>${item.brand || 'N/A'}</td>
+          <td>${item.model || 'N/A'}</td>
+          <td>${item.year || 'N/A'}</td>
+          <td>${item.color || 'N/A'}</td>
+          <td>${item.status || 'N/A'}</td>
+          <td class="text-right">${formatCurrency(item.price || item.sellingPrice || item.purchasePrice || 0, item.currency || 'LKR')}</td>
+        </tr>
+      `;
+    });
+
+    htmlContent += `
+          <tr class="total-row">
+            <td colspan="6">TOTAL VALUE</td>
+            <td class="text-right">${formatCurrency(totalValue)}</td>
+          </tr>
+        </tbody>
+      </table>
+    `;
+  } else if (reportType === 'customers') {
+    htmlContent += `
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Contact</th>
+            <th>Email</th>
+            <th>Address</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    (data as any[]).forEach(item => {
+      htmlContent += `
+        <tr>
+          <td>${item.id || item._id || 'N/A'}</td>
+          <td>${item.name || 'N/A'}</td>
+          <td>${item.contact || item.phone || 'N/A'}</td>
+          <td>${item.email || 'N/A'}</td>
+          <td>${item.address || 'N/A'}</td>
+        </tr>
+      `;
+    });
+
+    htmlContent += `
+        </tbody>
+      </table>
+    `;
+  } else if (reportType === 'financial' || reportType === 'performance') {
+    htmlContent += `
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>ID</th>
+            <th>Type</th>
+            <th>Vehicle</th>
+            <th>Status</th>
+            <th class="text-right">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    let totalAmount = 0;
+    (data as Transaction[]).forEach(item => {
+      const date = new Date(item.completionDate || item.reservationDate || '').toLocaleDateString();
+      const vehicle = `${item.vehicleDetails.brand} ${item.vehicleDetails.model}`;
+      totalAmount += item.pricing.totalAmount;
+      
+      htmlContent += `
+        <tr>
+          <td>${date}</td>
+          <td>${item.id}</td>
+          <td>${item.type}</td>
+          <td>${vehicle}</td>
+          <td>${item.status}</td>
+          <td class="text-right">${formatCurrency(item.pricing.totalAmount, item.currency)}</td>
+        </tr>
+      `;
+    });
+
+    htmlContent += `
+          <tr class="total-row">
+            <td colspan="5">TOTAL</td>
+            <td class="text-right">${formatCurrency(totalAmount)}</td>
+          </tr>
+        </tbody>
+      </table>
+    `;
   }
 
   htmlContent += `
       <div class="footer">
-        <p>&copy; ${new Date().getFullYear()} Moder Car Sale - Advanced Accounting System</p>
+        <p>&copy; ${new Date().getFullYear()} Modern Car Sale - Advanced Accounting System</p>
         <p>Powered by NextWave Tech Labs</p>
       </div>
     </body>

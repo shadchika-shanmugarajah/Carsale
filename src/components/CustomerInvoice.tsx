@@ -9,6 +9,7 @@ interface CustomerInvoiceProps {
     invoiceNumber: string;
     date: string;
     customerName: string;
+    customerTitle?: string;
     customerAddress: string;
     customerContact: string;
     customerNIC: string;
@@ -63,31 +64,39 @@ const CustomerInvoice: React.FC<CustomerInvoiceProps> = ({ invoiceData }) => {
 
   return (
     <div className="invoice-container">
-      <div className="invoice-page customer-invoice-modern">
-        {/* Header with Logo */}
-        <div className="modern-invoice-header">
-          <div className="modern-logo-section">
-            {/* 
-              OPTION 1: If image is in public folder (e.g., public/images/logo.png)
-              <img src="/images/modern-car-sale-logo.png" alt="Modern Car Sale Logo" style={{width: '100%', maxWidth: '600px', height: 'auto'}} />
-              
-              OPTION 2: If image is imported from src/assets folder
-              <img src={logoImage} alt="Modern Car Sale Logo" style={{width: '100%', maxWidth: '600px', height: 'auto'}} />
-            */}
-            
-            {/* Current Logo Image */}
-            <img src="/images/modern-car-sale-logo.png.jpg" alt="Modern Car Sale Logo" style={{width: '100%', maxWidth: '600px', height: 'auto'}} />
-            
-            <p className="modern-tagline" style={{textAlign: 'center', marginTop: '5px', fontSize: '13px', color: '#2c5aa0', fontWeight: '500'}}>Importers of Brand New & Used Vehicles</p>
-          </div>
-          <div className="modern-location">
-            <p className="modern-date" style={{fontSize: '16px', fontWeight: 'bold', marginTop: '20px'}}>Date: {invoiceData.date || today}</p>
-          </div>
+      <div className="invoice-page customer-invoice-modern" style={{
+        backgroundImage: 'url(/images/moderncar_sheet.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        position: 'relative',
+        minHeight: '297mm',
+        width: '210mm'
+      }}>
+        
+        {/* Date - positioned in top right area */}
+        <div style={{
+          position: 'absolute',
+          top: '180px',
+          right: '40px',
+          fontSize: '16px',
+          fontWeight: 'bold'
+        }}>
+          Date: {invoiceData.date || today}
         </div>
 
         {/* Invoice Title */}
-        <div className="modern-invoice-title">
-          <h2 style={{textDecoration: 'underline', textAlign: 'center', fontSize: '28px', marginBottom: '10px'}}>INVOICE</h2>
+        <div style={{
+          textAlign: 'center',
+          paddingTop: '220px',
+          marginBottom: '20px'
+        }}>
+          <h2 style={{
+            textDecoration: 'underline',
+            fontSize: '28px',
+            margin: '0',
+            fontWeight: 'bold'
+          }}>INVOICE</h2>
         </div>
 
         {/* Main Content Wrapper with Center Padding */}
@@ -177,7 +186,7 @@ const CustomerInvoice: React.FC<CustomerInvoiceProps> = ({ invoiceData }) => {
               <tr>
                 <td className="modern-label" style={{width: '250px', padding: '4px 0', fontSize: '16px', verticalAlign: 'top'}}><strong>To be delivered</strong></td>
                 <td className="modern-value" style={{padding: '4px 0', fontSize: '16px'}}>
-                  : <strong>Mr. {invoiceData.customerName}</strong><br />
+                  : <strong>{invoiceData.customerTitle || 'Mr.'} {invoiceData.customerName}</strong><br />
                   &nbsp;&nbsp;<strong>No:- {invoiceData.customerAddress}</strong><br />
                   &nbsp;&nbsp;<strong>NIC NO: {invoiceData.customerNIC}</strong>
                 </td>
@@ -188,7 +197,7 @@ const CustomerInvoice: React.FC<CustomerInvoiceProps> = ({ invoiceData }) => {
 
         {/* Collection Notice */}
         <div className="modern-collection-notice" style={{marginTop: '10px', fontSize: '14px'}}>
-          <p style={{margin: '5px 0'}}><strong>All Original Documents and Vehicle collected by Mr. {invoiceData.customerName} (NIC NO: {invoiceData.customerNIC})</strong></p>
+          <p style={{margin: '5px 0'}}><strong>All Original Documents and Vehicle collected by {invoiceData.customerTitle || 'Mr.'} {invoiceData.customerName} (NIC NO: {invoiceData.customerNIC})</strong></p>
           <p style={{color: '#e74c3c', fontWeight: 'bold', marginTop: '5px', margin: '5px 0'}}>Original Invoice Delivered</p>
         </div>
 
@@ -207,21 +216,9 @@ const CustomerInvoice: React.FC<CustomerInvoiceProps> = ({ invoiceData }) => {
         </div>
         </div>
         {/* End of Main Content Wrapper */}
-
-        {/* Footer */}
-        <div className="invoice-footer" style={{marginTop: '10px', borderTop: '2px solid #000', paddingTop: '10px', pageBreakInside: 'avoid', display: 'block', visibility: 'visible'}}>
-          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap'}}>
-            <div style={{fontSize: '16px', fontWeight: 'bold', color: '#2c5aa0', minWidth: '200px'}}>
-              MODERN CAR SALE
-            </div>
-            <div style={{textAlign: 'right', fontSize: '12px', minWidth: '300px'}}>
-              <p style={{margin: '3px 0', fontWeight: 'bold'}}>📍 402, MAIN STREET MARUTHAMUNAI</p>
-              <p style={{margin: '3px 0', fontWeight: 'bold'}}>
-                📞 067 22 29 174 | ☎ 077 70 35 049 | ☎ 077 96 837 16 | ☎ 077 90 585 90
-              </p>
-          </div>
-          </div>
-        </div>
+        
+        {/* Footer - Contact info is already in the letterhead background, so we just add spacing */}
+        <div style={{marginBottom: '80px'}}></div>
       </div>
     </div>
   );

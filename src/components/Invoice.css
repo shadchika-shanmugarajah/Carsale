@@ -434,7 +434,7 @@
   font-style: italic;
 }
 
-/* Print Styles - Version 6.0 - FIXED HEIGHT CONTAINER */
+/* Print Styles - Version 7.0 - WITH LETTERHEAD BACKGROUND */
 @media print {
   @page {
     size: A4 portrait;
@@ -471,22 +471,29 @@
     page-break-inside: avoid !important;
     page-break-before: avoid !important;
     display: block !important;
+    background: white !important;
   }
 
-  /* Fit content WITHOUT transform */
+  /* Fit content WITH background image */
   .invoice-page {
     box-shadow: none !important;
     border-radius: 0 !important;
-    padding: 3mm !important;
+    padding: 0 !important;
     margin: 0 !important;
     page-break-inside: avoid !important;
-    width: 100% !important;
-    min-height: 100% !important;
-    max-height: none !important;
-    overflow: visible !important;
-    display: flex !important;
-    flex-direction: column !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    min-height: 297mm !important;
+    max-height: 297mm !important;
+    overflow: hidden !important;
+    display: block !important;
     box-sizing: border-box !important;
+    /* Ensure background image prints */
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
   }
 
   /* Force all child sections to avoid breaks and be compact */

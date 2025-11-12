@@ -20,6 +20,7 @@ interface BankInvoiceProps {
     advanceAmount: number;
     loanAmount: number;
     deliverToName: string;
+    deliverToTitle?: string;
     deliverToAddress: string;
     deliverToNIC: string;
     sellerName: string;
@@ -44,18 +45,20 @@ const BankInvoice: React.FC<BankInvoiceProps> = ({ invoiceData }) => {
 
   return (
     <div className="invoice-container">
-      <div className="invoice-page" style={{fontFamily: 'Arial, sans-serif', padding: '20px'}}>
-        {/* Header with Logo */}
-        <div className="modern-header" style={{textAlign: 'center', marginBottom: '20px'}}>
-          <div className="modern-logo-section" style={{marginBottom: '10px'}}>
-            <img src="/images/modern-car-sale-logo.png.jpg" alt="Modern Car Sale Logo" style={{width: '100%', maxWidth: '600px', height: 'auto'}} />
-            
-            <p className="modern-tagline" style={{textAlign: 'center', marginTop: '5px', fontSize: '13px', color: '#2c5aa0', fontWeight: '500'}}>Importers of Brand New & Used Vehicles</p>
-          </div>
-        </div>
-
+      <div className="invoice-page" style={{
+        fontFamily: 'Arial, sans-serif',
+        backgroundImage: 'url(/images/moderncar_sheet.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        position: 'relative',
+        minHeight: '297mm',
+        width: '210mm',
+        padding: '20px'
+      }}>
+        
         {/* Main Content Wrapper with Center Padding */}
-        <div style={{maxWidth: '800px', margin: '0 auto', padding: '0 40px'}}>
+        <div style={{maxWidth: '800px', margin: '0 auto', padding: '0 40px', paddingTop: '180px'}}>
           {/* Date and Bank Details Section */}
           <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px'}}>
             {/* Bank Details - Left Side */}
@@ -131,7 +134,7 @@ const BankInvoice: React.FC<BankInvoiceProps> = ({ invoiceData }) => {
                 <tr>
                   <td className="modern-label" style={{paddingTop: '20px', fontSize: '16px', verticalAlign: 'top'}}><strong>To be delivered</strong></td>
                   <td className="modern-value" style={{paddingTop: '20px', fontSize: '16px'}}>
-                    : <strong>Mr. {invoiceData.deliverToName}</strong><br />
+                    : <strong>{invoiceData.deliverToTitle || 'Mr.'} {invoiceData.deliverToName}</strong><br />
                     &nbsp;&nbsp;<strong>No:-{invoiceData.deliverToAddress}</strong><br />
                     &nbsp;&nbsp;<strong>NIC NO: {invoiceData.deliverToNIC}</strong>
                   </td>
@@ -140,18 +143,15 @@ const BankInvoice: React.FC<BankInvoiceProps> = ({ invoiceData }) => {
             </table>
           </div>
 
-          {/* Footer Section */}
+          {/* Signature Section */}
           <div style={{marginTop: '60px', marginBottom: '20px', display: 'flex', justifyContent: 'flex-end'}}>
             <div style={{textAlign: 'center', borderTop: '2px dotted #000', paddingTop: '10px', width: '300px'}}>
               <p style={{margin: '5px 0', fontSize: '18px', fontWeight: 'bold'}}>Modern Car Sale</p>
             </div>
           </div>
 
-          {/* Company Contact Details */}
-          <div style={{marginTop: '20px', textAlign: 'center'}}>
-            <p style={{margin: '5px 0', fontSize: '14px', fontWeight: 'bold'}}>📍 402, MAIN STREET MARUTHAMUNAI</p>
-            <p style={{margin: '5px 0', fontSize: '14px', fontWeight: 'bold'}}>📞 067 22 29 174 | ☎ 077 70 35 049 | ☎ 077 96 837 16 | ☎ 077 90 585 90</p>
-          </div>
+          {/* Footer spacing - contact info is in the letterhead background */}
+          <div style={{marginBottom: '80px'}}></div>
         </div>
       </div>
     </div>

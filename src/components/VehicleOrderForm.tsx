@@ -22,6 +22,7 @@ interface VehicleOrderFormData {
   paymentMethod: string;
   // New fields
   chassisNo: string;
+  engineNo: string;
   lcAmount: number;
   lcNumber: string;
   lcBank: string;
@@ -61,6 +62,7 @@ const VehicleOrderForm: React.FC<VehicleOrderFormProps> = ({ onSubmit, onCancel,
       },
       paymentMethod: 'Bank Transfer',
       chassisNo: '',
+      engineNo: '',
       lcAmount: '' as any,
       lcNumber: '',
       lcBank: '',
@@ -315,6 +317,19 @@ const VehicleOrderForm: React.FC<VehicleOrderFormProps> = ({ onSubmit, onCancel,
                     onChange={handleInputChange}
                     className="form-input"
                     placeholder="e.g., ABC-1234 (Optional)"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="engineNo" className="form-label">Engine No</label>
+                  <input
+                    type="text"
+                    id="engineNo"
+                    name="engineNo"
+                    value={formData.engineNo}
+                    onChange={handleInputChange}
+                    className="form-input"
+                    placeholder="e.g., ENG-5678 (Optional)"
                   />
                 </div>
               </div>

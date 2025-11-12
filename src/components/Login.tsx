@@ -44,7 +44,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           <div className="logo-circle">
             <span className="logo-icon">🚘</span>
           </div>
-          <h1 className="login-title">Moder Car Sale</h1>
+          <h1 className="login-title">Modern Car Sale</h1>
           <p className="login-subtitle">Advanced Accounting System</p>
           <p className="powered-text">Powered by NextWave Tech Labs</p>
         </div>
