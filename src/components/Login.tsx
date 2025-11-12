@@ -35,7 +35,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       } else if (err.status === 401) {
         errorMessage = 'Invalid username or password. Please try again.';
       } else if (err.status === 404) {
-        errorMessage = 'Backend endpoint not found. Please check the API URL configuration.';
+        errorMessage = `Backend endpoint not found (404).\n\n` +
+          `Trying to reach: ${err.url || 'unknown URL'}\n\n` +
+          `Please check:\n` +
+          `1. Backend is running and accessible\n` +
+          `2. API URL is correct in src/utils/api.ts\n` +
+          `3. Backend uses correct endpoint structure\n` +
+          `4. Check browser console for full URL`;
       } else if (err.status === 500) {
         errorMessage = 'Server error. Please try again later.';
       } else if (err.message) {

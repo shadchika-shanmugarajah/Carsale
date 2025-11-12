@@ -1,10 +1,15 @@
 // API configuration and utilities
 // Use environment variable if available, otherwise fall back to production URL
 // For local development, create .env.local file with: REACT_APP_API_URL=http://localhost:5000/api
+// Backend URL: https://carsale-backend-1.onrender.com/api
+// Verified: Backend uses /api prefix (returns 401 for /api/auth/login, 404 for /auth/login)
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://carsale-backend-1.onrender.com/api';
 
 // Log the API URL being used (helpful for debugging)
-console.log('🔗 API Base URL:', API_BASE_URL);
+if (process.env.NODE_ENV === 'development') {
+  console.log('🔗 API Base URL:', API_BASE_URL);
+  console.log('💡 Tip: If you get 404 errors, verify the backend URL is correct');
+}
 
 // Helper to get auth token from localStorage
 export const getAuthToken = (): string | null => {
@@ -46,69 +51,106 @@ async function apiCall<T>(
   };
 
   try {
-    // Construct full URL
-    const url = `${API_BASE_URL}${endpoint}`;
-    console.log(`📡 API Call: ${options.method || 'GET'} ${url}`);
+    // Construct full URL - ensure no double slashes
+    const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+    const endpointPath = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const url = `${baseUrl}${endpointPath}`;
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📡 API Call: ${options.method || 'GET'} ${url}`);
+    }
     
     const response = await fetch(url, config);
     
     // Handle non-JSON responses or errors
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ 
-        message: `HTTP error! status: ${response.status}` 
-      }));
+      // Try to get error message from response
+      let errorData: any;
+      const contentType = response.headers.get('content-type');
       
-      console.error('❌ API Error Response:', {
-        status: response.status,
-        statusText: response.statusText,
-        endpoint,
-        url,
-        errorData
-      });
+      if (contentType && contentType.includes('application/json')) {
+        try {
+          errorData = await response.json();
+        } catch {
+          errorData = { message: `HTTP error! status: ${response.status}` };
+        }
+      } else {
+        const text = await response.text().catch(() => '');
+        errorData = { 
+          message: text || `HTTP error! status: ${response.status}`,
+          statusText: response.statusText
+        };
+      }
       
-      const error: any = new Error(errorData.message || errorData.error || 'API request failed');
+      if (process.env.NODE_ENV === 'development') {
+        console.error('❌ API Error Response:', {
+          status: response.status,
+          statusText: response.statusText,
+          endpoint,
+          url,
+          errorData
+        });
+      }
+      
+      // Create error with helpful message for 404
+      let errorMessage = errorData.message || errorData.error || 'API request failed';
+      
+      if (response.status === 404) {
+        errorMessage = `Endpoint not found (404). Please check:\n` +
+          `1. Backend URL: ${baseUrl}\n` +
+          `2. Endpoint: ${endpoint}\n` +
+          `3. Full URL: ${url}\n` +
+          `4. Verify backend is running and accessible\n` +
+          `5. Check if backend uses /api prefix or not`;
+      }
+      
+      const error: any = new Error(errorMessage);
       error.status = response.status;
       error.data = errorData;
       error.endpoint = endpoint;
       error.url = url;
+      error.baseUrl = baseUrl;
       throw error;
     }
 
     const data = await response.json();
-    console.log(`✅ API Success: ${endpoint}`, data);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`✅ API Success: ${endpoint}`, data);
+    }
     return data;
   } catch (error: any) {
     // Enhanced error logging
     if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+      const endpointPath = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+      const url = `${baseUrl}${endpointPath}`;
+      
       console.error('🌐 Network Error - Unable to connect to backend:', {
-        url: `${API_BASE_URL}${endpoint}`,
+        url,
         error: error.message,
         suggestion: 'Check if backend is running and accessible'
       });
       const networkError: any = new Error(
-        `Unable to connect to backend server at ${API_BASE_URL}. Please check if the backend is running.`
+        `Unable to connect to backend server at ${baseUrl}. Please check if the backend is running.`
       );
       networkError.isNetworkError = true;
-      networkError.url = `${API_BASE_URL}${endpoint}`;
+      networkError.url = url;
       throw networkError;
     }
     
     // If error was already processed (has status property), re-throw it
     if (error.status) {
-      console.error('❌ API call error:', {
-        endpoint,
-        url: `${API_BASE_URL}${endpoint}`,
-        error: error.message,
-        status: error.status,
-        data: error.data
-      });
       throw error;
     }
     
     // Handle other unexpected errors
+    const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+    const endpointPath = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const url = `${baseUrl}${endpointPath}`;
+    
     console.error('❌ API call error:', {
       endpoint,
-      url: `${API_BASE_URL}${endpoint}`,
+      url,
       error: error.message || error,
     });
     throw error;
