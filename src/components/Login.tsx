@@ -26,7 +26,23 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       onLogin();
     } catch (err: any) {
       console.error('Login error:', err);
-      setError(err.message || 'Failed to connect to server. Make sure backend is running on https://carsale-backend-1.onrender.com/');
+      
+      // Better error messages based on error type
+      let errorMessage = 'Login failed. Please try again.';
+      
+      if (err.isNetworkError) {
+        errorMessage = `Cannot connect to backend server. Please ensure the backend is running and accessible.`;
+      } else if (err.status === 401) {
+        errorMessage = 'Invalid username or password. Please try again.';
+      } else if (err.status === 404) {
+        errorMessage = 'Backend endpoint not found. Please check the API URL configuration.';
+      } else if (err.status === 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
       setIsLoading(false);
     }
   };

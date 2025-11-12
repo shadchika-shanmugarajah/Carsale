@@ -1,5 +1,10 @@
 // API configuration and utilities
-const API_BASE_URL = 'https://carsale-backend-1.onrender.com/api';
+// Use environment variable if available, otherwise fall back to production URL
+// For local development, create .env.local file with: REACT_APP_API_URL=http://localhost:5000/api
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://carsale-backend-1.onrender.com/api';
+
+// Log the API URL being used (helpful for debugging)
+console.log('API Base URL:', API_BASE_URL);
 
 // Helper to get auth token from localStorage
 export const getAuthToken = (): string | null => {
@@ -41,19 +46,70 @@ async function apiCall<T>(
   };
 
   try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+    const url = `${API_BASE_URL}${endpoint}`;
+    console.log(`API Call: ${options.method || 'GET'} ${url}`);
+    
+    const response = await fetch(url, config);
     
     // Handle non-JSON responses or errors
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ 
         message: `HTTP error! status: ${response.status}` 
       }));
-      throw new Error(errorData.message || 'API request failed');
+      
+      console.error('API Error Response:', {
+        status: response.status,
+        statusText: response.statusText,
+        endpoint,
+        url,
+        errorData
+      });
+      
+      const error: any = new Error(errorData.message || errorData.error || 'API request failed');
+      error.status = response.status;
+      error.data = errorData;
+      error.endpoint = endpoint;
+      error.url = url;
+      throw error;
     }
 
-    return await response.json();
-  } catch (error) {
-    console.error('API call error:', error);
+    const data = await response.json();
+    console.log(`API Success: ${endpoint}`, data);
+    return data;
+  } catch (error: any) {
+    // Enhanced error logging
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      console.error('Network Error - Unable to connect to backend:', {
+        url: `${API_BASE_URL}${endpoint}`,
+        error: error.message,
+        suggestion: 'Check if backend is running and accessible'
+      });
+      const networkError: any = new Error(
+        `Unable to connect to backend server at ${API_BASE_URL}. Please check if the backend is running.`
+      );
+      networkError.isNetworkError = true;
+      networkError.url = `${API_BASE_URL}${endpoint}`;
+      throw networkError;
+    }
+    
+    // If error was already processed (has status property), re-throw it
+    if (error.status) {
+      console.error('API call error:', {
+        endpoint,
+        url: `${API_BASE_URL}${endpoint}`,
+        error: error.message,
+        status: error.status,
+        data: error.data
+      });
+      throw error;
+    }
+    
+    // Handle other unexpected errors
+    console.error('API call error:', {
+      endpoint,
+      url: `${API_BASE_URL}${endpoint}`,
+      error: error.message || error,
+    });
     throw error;
   }
 }
