@@ -3,6 +3,7 @@
 // For local development, create .env.local file with: REACT_APP_API_URL=http://localhost:5000/api
 // Backend URL: https://carsale-backend-1.onrender.com/api
 // Verified: Backend uses /api prefix (returns 401 for /api/auth/login, 404 for /auth/login)
+
 const API_BASE_URL = "https://carsale-backend-1.onrender.com/api";
 
 // Log the API URL being used (helpful for debugging)
