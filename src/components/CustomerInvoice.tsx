@@ -1,17 +1,22 @@
 import React from 'react';
 import './Invoice.css';
+// Import your logo image - adjust the path based on where you save it
+// import logoImage from '../assets/modern-car-sale-logo.png';
+// OR if you put it in public folder, you don't need to import
 
 interface CustomerInvoiceProps {
   invoiceData: {
     invoiceNumber: string;
     date: string;
     customerName: string;
+    customerTitle?: string;
     customerAddress: string;
     customerContact: string;
     customerNIC: string;
     vehicleRegisteredNo?: string;
     make: string;
     model: string;
+    commonlyCalled?: string;
     yearOfManufacture: number;
     chassisNo: string;
     engineNo: string;
@@ -30,7 +35,10 @@ interface CustomerInvoiceProps {
     };
     totalAmount: number;
     advanceAmount: number;
+    facilityAmount?: number;
+    facilityProvider?: string;
     balanceAmount: number;
+    rmvAmount?: number;
     paymentMethod: string;
     paymentStatus?: string;
     sellerName: string;
@@ -56,171 +64,161 @@ const CustomerInvoice: React.FC<CustomerInvoiceProps> = ({ invoiceData }) => {
 
   return (
     <div className="invoice-container">
-      <div className="invoice-page customer-invoice">
-        {/* Header with Logo */}
-        <div className="invoice-header">
-          <div className="company-logo-section">
-            <div className="logo-design">
-              <svg width="150" height="50" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
-                {/* Modern Car Logo */}
-                <defs>
-                  <linearGradient id="carGradientCustomer" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" style={{stopColor: '#e74c3c', stopOpacity: 1}} />
-                    <stop offset="100%" style={{stopColor: '#c0392b', stopOpacity: 1}} />
-                  </linearGradient>
-                </defs>
-                {/* Car silhouette */}
-                <path d="M 20 35 Q 25 25, 35 25 L 55 25 Q 60 25, 65 30 L 75 30 Q 80 30, 85 35 L 85 42 Q 85 45, 82 45 L 78 45 Q 77 48, 74 48 Q 71 48, 70 45 L 35 45 Q 34 48, 31 48 Q 28 48, 27 45 L 23 45 Q 20 45, 20 42 Z" 
-                      fill="url(#carGradientCustomer)" stroke="#000" strokeWidth="0.5"/>
-                {/* Wheels */}
-                <circle cx="31" cy="45" r="4" fill="#2c3e50" stroke="#000" strokeWidth="0.5"/>
-                <circle cx="74" cy="45" r="4" fill="#2c3e50" stroke="#000" strokeWidth="0.5"/>
-                <circle cx="31" cy="45" r="2" fill="#7f8c8d"/>
-                <circle cx="74" cy="45" r="2" fill="#7f8c8d"/>
-                {/* Windshield */}
-                <path d="M 40 30 L 48 26 L 60 26 L 68 30 Z" fill="#3498db" opacity="0.4"/>
-                {/* Speed lines */}
-                <line x1="10" y1="28" x2="18" y2="28" stroke="#e74c3c" strokeWidth="2" strokeLinecap="round"/>
-                <line x1="8" y1="33" x2="16" y2="33" stroke="#e74c3c" strokeWidth="2" strokeLinecap="round"/>
-                <line x1="6" y1="38" x2="14" y2="38" stroke="#e74c3c" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </div>
-            <div className="company-info">
-              <h1 className="company-name-invoice">Modern Car Sale</h1>
-              <p className="company-tagline">Importers of Brand New & Used Vehicles</p>
-            </div>
-          </div>
-          <div className="invoice-title-section">
-            <h2 className="invoice-title">SALES INVOICE</h2>
-            <p className="invoice-number">Invoice #: {invoiceData.invoiceNumber}</p>
-            <p className="invoice-date">Date: {invoiceData.date || today}</p>
-          </div>
+      <div className="invoice-page customer-invoice-modern" style={{
+        backgroundImage: 'url(/images/moderncar_sheet.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        position: 'relative',
+        minHeight: '297mm',
+        width: '210mm'
+      }}>
+        
+        {/* Date - positioned in top right area */}
+        <div style={{
+          position: 'absolute',
+          top: '180px',
+          right: '40px',
+          fontSize: '16px',
+          fontWeight: 'bold'
+        }}>
+          Date: {invoiceData.date || today}
         </div>
 
-        {/* Customer Information */}
-        <div className="customer-info-section">
-          <h3 className="section-heading">Bill To:</h3>
-          <div className="customer-details">
-            <p><strong>{invoiceData.customerName}</strong></p>
-            <p>{invoiceData.customerAddress}</p>
-            <p>Contact: {invoiceData.customerContact}</p>
-            <p>NIC: {invoiceData.customerNIC}</p>
-          </div>
+        {/* Invoice Title */}
+        <div style={{
+          textAlign: 'center',
+          paddingTop: '220px',
+          marginBottom: '20px'
+        }}>
+          <h2 style={{
+            textDecoration: 'underline',
+            fontSize: '28px',
+            margin: '0',
+            fontWeight: 'bold'
+          }}>INVOICE</h2>
         </div>
 
-        {/* Vehicle Details */}
-        <div className="vehicle-section">
-          <h3 className="section-heading">Vehicle Details</h3>
-          <table className="details-table">
+        {/* Main Content Wrapper with Center Padding */}
+        <div style={{maxWidth: '800px', margin: '0 auto', padding: '0 40px'}}>
+          {/* Vehicle Details in Left-Aligned Format */}
+          <div className="modern-vehicle-section">
+            <table className="modern-details-table" style={{width: '100%', borderCollapse: 'collapse'}}>
             <tbody>
               <tr>
-                <td className="label-col"><strong>Vehicle Registered N0</strong></td>
-                <td className="value-col">: {invoiceData.vehicleRegisteredNo || 'UNREGISTER'}</td>
+                <td className="modern-label" style={{width: '250px', padding: '4px 0', fontSize: '16px'}}><strong>Vehicle Registered N0</strong></td>
+                <td className="modern-value" style={{padding: '4px 0', fontSize: '16px'}}>: <strong>{invoiceData.vehicleRegisteredNo || 'UN REGISTERED'}</strong></td>
               </tr>
               <tr>
-                <td className="label-col"><strong>Make</strong></td>
-                <td className="value-col">: {invoiceData.make}</td>
+                <td className="modern-label" style={{padding: '4px 0', fontSize: '16px'}}><strong>Make</strong></td>
+                <td className="modern-value" style={{padding: '4px 0', fontSize: '16px'}}>: <strong>{invoiceData.make}</strong></td>
               </tr>
               <tr>
-                <td className="label-col"><strong>Model</strong></td>
-                <td className="value-col">: {invoiceData.model}</td>
+                <td className="modern-label" style={{padding: '4px 0', fontSize: '16px'}}><strong>Model</strong></td>
+                <td className="modern-value" style={{padding: '4px 0', fontSize: '16px'}}>: <strong>{invoiceData.model}</strong></td>
+              </tr>
+              {invoiceData.commonlyCalled && (
+              <tr>
+                  <td className="modern-label" style={{padding: '4px 0', fontSize: '16px'}}><strong>Commonly Called</strong></td>
+                  <td className="modern-value" style={{padding: '4px 0', fontSize: '16px'}}>: <strong>{invoiceData.commonlyCalled}</strong></td>
+              </tr>
+              )}
+              <tr>
+                <td className="modern-label" style={{padding: '4px 0', fontSize: '16px'}}><strong>Color</strong></td>
+                <td className="modern-value" style={{padding: '4px 0', fontSize: '16px'}}>: <strong>{invoiceData.colour}</strong></td>
               </tr>
               <tr>
-                <td className="label-col"><strong>Year of Manufacture</strong></td>
-                <td className="value-col">: {invoiceData.yearOfManufacture}</td>
+                <td className="modern-label" style={{padding: '4px 0', fontSize: '16px'}}><strong>Fuel Type</strong></td>
+                <td className="modern-value" style={{padding: '4px 0', fontSize: '16px'}}>: <strong>{invoiceData.fuelType}</strong></td>
               </tr>
               <tr>
-                <td className="label-col"><strong>Chassis NO</strong></td>
-                <td className="value-col">: {invoiceData.chassisNo}</td>
+                <td className="modern-label" style={{padding: '4px 0', fontSize: '16px'}}><strong>Year of Manufacture</strong></td>
+                <td className="modern-value" style={{padding: '4px 0', fontSize: '16px'}}>: <strong>{invoiceData.yearOfManufacture}</strong></td>
               </tr>
               <tr>
-                <td className="label-col"><strong>Engine No</strong></td>
-                <td className="value-col">: {invoiceData.engineNo}</td>
+                <td className="modern-label" style={{padding: '4px 0', fontSize: '16px'}}><strong>Chassis NO</strong></td>
+                <td className="modern-value" style={{padding: '4px 0', fontSize: '16px'}}>: <strong>{invoiceData.chassisNo}</strong></td>
               </tr>
               <tr>
-                <td className="label-col"><strong>Fuel Type</strong></td>
-                <td className="value-col">: {invoiceData.fuelType}</td>
-              </tr>
-              <tr>
-                <td className="label-col"><strong>Colour</strong></td>
-                <td className="value-col">: {invoiceData.colour}</td>
-              </tr>
-              <tr>
-                <td className="label-col"><strong>Country of Origin</strong></td>
-                <td className="value-col">: {invoiceData.countryOfOrigin}</td>
+                <td className="modern-label" style={{padding: '4px 0', fontSize: '16px'}}><strong>Engine No</strong></td>
+                <td className="modern-value" style={{padding: '4px 0', fontSize: '16px'}}>: <strong>{invoiceData.engineNo}</strong></td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        {/* Amount Summary */}
-        <div className="cost-section">
-          <h3 className="section-heading">Amount Summary</h3>
-          <table className="cost-table">
+        {/* Financial Details */}
+        <div className="modern-financial-section" style={{marginTop: '15px'}}>
+          <table className="modern-details-table" style={{width: '100%', borderCollapse: 'collapse'}}>
             <tbody>
-              <tr className="total-row">
-                <td><strong>Total Amount</strong></td>
-                <td className="text-right"><strong>{formatCurrency(invoiceData.totalAmount)}</strong></td>
+              <tr>
+                <td className="modern-label" style={{width: '250px', padding: '4px 0', fontSize: '16px'}}><strong>Total Amount</strong></td>
+                <td className="modern-value" style={{padding: '4px 0', fontSize: '16px'}}>: <strong>{formatCurrency(invoiceData.totalAmount)}/-</strong></td>
               </tr>
-              <tr className="payment-row">
-                <td>Advance Payment</td>
-                <td className="text-right"><span style={{color: '#27ae60'}}>({formatCurrency(invoiceData.advanceAmount)})</span></td>
+              <tr>
+                <td className="modern-label" style={{padding: '4px 0', fontSize: '16px'}}><strong>Advance Amount</strong></td>
+                <td className="modern-value" style={{padding: '4px 0', fontSize: '16px'}}>: <strong>{formatCurrency(invoiceData.advanceAmount)}/-</strong></td>
               </tr>
-              <tr className="balance-row">
-                <td><strong>Balance Due</strong></td>
-                <td className="text-right"><strong>{formatCurrency(invoiceData.balanceAmount)}</strong></td>
+              {invoiceData.facilityAmount && invoiceData.facilityAmount > 0 && (
+                <tr>
+                  <td className="modern-label" style={{padding: '4px 0', fontSize: '16px'}}><strong>Facility Amount</strong></td>
+                  <td className="modern-value" style={{padding: '4px 0', fontSize: '16px'}}>: <strong>{formatCurrency(invoiceData.facilityAmount)}/- ({invoiceData.facilityProvider || 'Bank'})</strong></td>
+                </tr>
+              )}
+              <tr>
+                <td className="modern-label" style={{padding: '4px 0', fontSize: '16px'}}><strong>Balance Amount</strong></td>
+                <td className="modern-value" style={{padding: '4px 0', fontSize: '16px'}}>: <strong>{formatCurrency(invoiceData.balanceAmount)}/- ({invoiceData.paymentMethod})</strong></td>
+              </tr>
+              {invoiceData.rmvAmount && invoiceData.rmvAmount > 0 && (
+                <tr>
+                  <td className="modern-label" style={{padding: '4px 0', fontSize: '16px'}}><strong>R M V Amount</strong></td>
+                  <td className="modern-value" style={{padding: '4px 0', fontSize: '16px'}}>: <strong>{formatCurrency(invoiceData.rmvAmount)}/-</strong></td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Delivery Information */}
+        <div className="modern-delivery-section" style={{marginTop: '15px'}}>
+          <table className="modern-details-table" style={{width: '100%', borderCollapse: 'collapse'}}>
+            <tbody>
+              <tr>
+                <td className="modern-label" style={{width: '250px', padding: '4px 0', fontSize: '16px', verticalAlign: 'top'}}><strong>To be delivered</strong></td>
+                <td className="modern-value" style={{padding: '4px 0', fontSize: '16px'}}>
+                  : <strong>{invoiceData.customerTitle || 'Mr.'} {invoiceData.customerName}</strong><br />
+                  &nbsp;&nbsp;<strong>No:- {invoiceData.customerAddress}</strong><br />
+                  &nbsp;&nbsp;<strong>NIC NO: {invoiceData.customerNIC}</strong>
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        {/* Payment Information */}
-        <div className="payment-info-section">
-          <div className="payment-status-box">
-            <div className="payment-method-row">
-              <strong>Payment Method:</strong> 
-              <span className="payment-method-badge">{invoiceData.paymentMethod}</span>
-            </div>
-            <div className="payment-status-row">
-              <strong>Payment Status:</strong> 
-              <span className={`payment-status-badge ${invoiceData.balanceAmount === 0 ? 'status-fully-paid' : 'status-partial'}`}>
-                {invoiceData.balanceAmount === 0 ? '✅ FULLY PAID' : '⏳ PARTIAL PAYMENT'}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Terms and Conditions */}
-        <div className="terms-section">
-          <h4>Terms & Conditions:</h4>
-          <ul>
-            <li>Vehicle ownership transfers upon full payment</li>
-            <li>All taxes and duties are included</li>
-          </ul>
+        {/* Collection Notice */}
+        <div className="modern-collection-notice" style={{marginTop: '10px', fontSize: '14px'}}>
+          <p style={{margin: '5px 0'}}><strong>All Original Documents and Vehicle collected by {invoiceData.customerTitle || 'Mr.'} {invoiceData.customerName} (NIC NO: {invoiceData.customerNIC})</strong></p>
+          <p style={{color: '#e74c3c', fontWeight: 'bold', marginTop: '5px', margin: '5px 0'}}>Original Invoice Delivered</p>
         </div>
 
         {/* Signature Section */}
-        <div className="signature-section">
-          <div className="signature-line">
-            <div className="signature-placeholder"></div>
-            <div className="signature-info">
-              <p className="signature-name">{invoiceData.sellerName}</p>
-              <p className="signature-id">({invoiceData.sellerNIC})</p>
-              <p className="signature-title">Authorized Signature</p>
-            </div>
+        <div className="modern-signature-section" style={{marginTop: '15px', display: 'flex', justifyContent: 'space-between'}}>
+          <div className="partner-signature" style={{textAlign: 'center'}}>
+            <div style={{borderBottom: '2px dotted #000', width: '180px', height: '40px', marginBottom: '5px'}}></div>
+            <p style={{fontWeight: 'bold', fontSize: '14px', margin: '0'}}>Partner</p>
+          </div>
+          <div className="customer-signature" style={{textAlign: 'center'}}>
+            <div style={{borderBottom: '2px dotted #000', width: '180px', height: '40px', marginBottom: '5px'}}></div>
+            <p style={{fontWeight: 'bold', fontSize: '14px', margin: '0'}}>(Customer)</p>
+            <p style={{fontSize: '12px', margin: '2px 0'}}>{invoiceData.customerName}</p>
+            <p style={{fontSize: '12px', margin: '2px 0'}}>{invoiceData.customerNIC}</p>
           </div>
         </div>
-
-        {/* Footer */}
-        <div className="invoice-footer">
-          <div className="footer-contact">
-            <p>📍 402, MAIN STREET MARUTHAMUNAI</p>
-            <p>📞 {invoiceData.sellerContact} | ☎ 077 70 35 049 | ☎ 077 96 837 16 | ☎ 077 90 585 90</p>
-          </div>
-          <div className="footer-note">
-            <p>Thank you for your business!</p>
-          </div>
         </div>
+        {/* End of Main Content Wrapper */}
+        
+        {/* Footer - Contact info is already in the letterhead background, so we just add spacing */}
+        <div style={{marginBottom: '80px'}}></div>
       </div>
     </div>
   );

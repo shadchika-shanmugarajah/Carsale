@@ -14,7 +14,7 @@ const App: React.FC = () => {
 
   // Update browser tab title and handle splash screen
   useEffect(() => {
-    document.title = 'Moder Car Sale - Advanced Accounting System';
+    document.title = 'Modern Car Sale - Advanced Accounting System';
     
     // Show splash screen for 3 seconds
     const timer = setTimeout(() => {
@@ -77,7 +77,7 @@ const App: React.FC = () => {
             <div className="loading-bar">
               <div className="loading-progress"></div>
             </div>
-            <p>Initializing Moder Car Sale System...</p>
+            <p>Initializing Modern Car Sale System...</p>
           </div>
         </div>
       </div>
@@ -103,7 +103,7 @@ const App: React.FC = () => {
       <footer className="app-footer">
         <div className="footer-content">
           <div className="footer-left">
-            <p>&copy; 2024 Moder Car Sale. All rights reserved.</p>
+            <p>&copy; 2024 Modern Car Sale. All rights reserved.</p>
           </div>
           <div className="footer-right">
             <p className="developed-by">

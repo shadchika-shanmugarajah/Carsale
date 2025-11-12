@@ -347,7 +347,7 @@ const Reports: React.FC<ReportsProps> = ({ transactions: propTransactions, expen
       dataToExport = inventoryItems;
       summary = {
         totalItems: inventoryItems.length,
-        totalValue: inventoryItems.reduce((sum, item) => sum + item.price, 0)
+        totalValue: inventoryItems.reduce((sum, item) => sum + (item.price || (item as any).sellingPrice || (item as any).purchasePrice || 0), 0)
       };
     } else if (activeTab === 'customers') {
       dataToExport = customers;

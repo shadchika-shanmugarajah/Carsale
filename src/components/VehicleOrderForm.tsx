@@ -21,13 +21,15 @@ interface VehicleOrderFormData {
   };
   paymentMethod: string;
   // New fields
-  vehicleNumber: string;
+  chassisNo: string;
+  engineNo: string;
   lcAmount: number;
+  lcNumber: string;
   lcBank: string;
   additionalInfo: string;
   // Basic Information fields
-  vinNumber: string;
-  licensePlateNumber: string;
+  grade: string;
+  biNumber: string;
   customBasicInfo: { [key: string]: string };
 }
 
@@ -59,13 +61,15 @@ const VehicleOrderForm: React.FC<VehicleOrderFormProps> = ({ onSubmit, onCancel,
         customExpenses: {},
       },
       paymentMethod: 'Bank Transfer',
-      vehicleNumber: '',
+      chassisNo: '',
+      engineNo: '',
       lcAmount: '' as any,
+      lcNumber: '',
       lcBank: '',
       additionalInfo: '',
       // Basic Information fields
-      vinNumber: '',
-      licensePlateNumber: '',
+      grade: '',
+      biNumber: '',
       customBasicInfo: {},
     }
   );
@@ -304,15 +308,28 @@ const VehicleOrderForm: React.FC<VehicleOrderFormProps> = ({ onSubmit, onCancel,
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="vehicleNumber" className="form-label">Vehicle Number</label>
+                  <label htmlFor="chassisNo" className="form-label">Chassis No</label>
                   <input
                     type="text"
-                    id="vehicleNumber"
-                    name="vehicleNumber"
-                    value={formData.vehicleNumber}
+                    id="chassisNo"
+                    name="chassisNo"
+                    value={formData.chassisNo}
                     onChange={handleInputChange}
                     className="form-input"
                     placeholder="e.g., ABC-1234 (Optional)"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="engineNo" className="form-label">Engine No</label>
+                  <input
+                    type="text"
+                    id="engineNo"
+                    name="engineNo"
+                    value={formData.engineNo}
+                    onChange={handleInputChange}
+                    className="form-input"
+                    placeholder="e.g., ENG-5678 (Optional)"
                   />
                 </div>
               </div>
@@ -323,29 +340,28 @@ const VehicleOrderForm: React.FC<VehicleOrderFormProps> = ({ onSubmit, onCancel,
               <h3>📋 Basic Information</h3>
               <div className="form-grid">
                 <div className="form-group">
-                  <label htmlFor="vinNumber" className="form-label">VIN Number</label>
+                  <label htmlFor="grade" className="form-label">Grade</label>
                   <input
                     type="text"
-                    id="vinNumber"
-                    name="vinNumber"
-                    value={formData.vinNumber}
+                    id="grade"
+                    name="grade"
+                    value={formData.grade}
                     onChange={handleInputChange}
                     className="form-input"
-                    placeholder="e.g., 1HGBH41JXMN109186"
-                    maxLength={17}
+                    placeholder="e.g., Premium, Standard"
                   />
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="licensePlateNumber" className="form-label">License Plate Number</label>
+                  <label htmlFor="biNumber" className="form-label">BI Number</label>
                   <input
                     type="text"
-                    id="licensePlateNumber"
-                    name="licensePlateNumber"
-                    value={formData.licensePlateNumber}
+                    id="biNumber"
+                    name="biNumber"
+                    value={formData.biNumber}
                     onChange={handleInputChange}
                     className="form-input"
-                    placeholder="e.g., ABC-1234"
+                    placeholder="e.g., BI-123456"
                   />
                 </div>
               </div>
@@ -464,6 +480,19 @@ const VehicleOrderForm: React.FC<VehicleOrderFormProps> = ({ onSubmit, onCancel,
                     min="0"
                     step="any"
                     placeholder="Enter LC amount"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="lcNumber" className="form-label">LC Number</label>
+                  <input
+                    type="text"
+                    id="lcNumber"
+                    name="lcNumber"
+                    value={formData.lcNumber}
+                    onChange={handleInputChange}
+                    className="form-input"
+                    placeholder="e.g., LC-2024-001"
                   />
                 </div>
 

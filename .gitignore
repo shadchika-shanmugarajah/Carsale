@@ -24,3 +24,7 @@ node_modules
 # Ignore all env files
 .env
 .env.*
+
+# Build output
+build/
+dist/

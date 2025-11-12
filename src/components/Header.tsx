@@ -15,7 +15,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange, onLogout }) => 
     <header className="header">
       <div className="header-container">
         <div className="logo-section">
-          <h1 className="company-name">Moder Car Sale</h1>
+          <h1 className="company-name">Modern Car Sale</h1>
           <p className="company-subtitle">Advanced Accounting System</p>
           <p className="powered-by">Powered by NextWave Tech Labs</p>
         </div>

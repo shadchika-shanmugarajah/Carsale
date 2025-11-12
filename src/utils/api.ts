@@ -4,7 +4,7 @@
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://carsale-backend-1.onrender.com/api';
 
 // Log the API URL being used (helpful for debugging)
-console.log('API Base URL:', API_BASE_URL);
+console.log('🔗 API Base URL:', API_BASE_URL);
 
 // Helper to get auth token from localStorage
 export const getAuthToken = (): string | null => {
@@ -46,8 +46,9 @@ async function apiCall<T>(
   };
 
   try {
+    // Construct full URL
     const url = `${API_BASE_URL}${endpoint}`;
-    console.log(`API Call: ${options.method || 'GET'} ${url}`);
+    console.log(`📡 API Call: ${options.method || 'GET'} ${url}`);
     
     const response = await fetch(url, config);
     
@@ -57,7 +58,7 @@ async function apiCall<T>(
         message: `HTTP error! status: ${response.status}` 
       }));
       
-      console.error('API Error Response:', {
+      console.error('❌ API Error Response:', {
         status: response.status,
         statusText: response.statusText,
         endpoint,
@@ -74,12 +75,12 @@ async function apiCall<T>(
     }
 
     const data = await response.json();
-    console.log(`API Success: ${endpoint}`, data);
+    console.log(`✅ API Success: ${endpoint}`, data);
     return data;
   } catch (error: any) {
     // Enhanced error logging
     if (error.name === 'TypeError' && error.message.includes('fetch')) {
-      console.error('Network Error - Unable to connect to backend:', {
+      console.error('🌐 Network Error - Unable to connect to backend:', {
         url: `${API_BASE_URL}${endpoint}`,
         error: error.message,
         suggestion: 'Check if backend is running and accessible'
@@ -94,7 +95,7 @@ async function apiCall<T>(
     
     // If error was already processed (has status property), re-throw it
     if (error.status) {
-      console.error('API call error:', {
+      console.error('❌ API call error:', {
         endpoint,
         url: `${API_BASE_URL}${endpoint}`,
         error: error.message,
@@ -105,7 +106,7 @@ async function apiCall<T>(
     }
     
     // Handle other unexpected errors
-    console.error('API call error:', {
+    console.error('❌ API call error:', {
       endpoint,
       url: `${API_BASE_URL}${endpoint}`,
       error: error.message || error,
@@ -276,6 +277,7 @@ export interface VehicleOrder {
     model: string;
     year: number;
     color: string;
+    engineNo?: string;
     specifications?: string;
   };
   pricing: {
@@ -296,6 +298,9 @@ export interface VehicleOrder {
     status: string;
     description: string;
   }[];
+  movedToInventory?: boolean;
+  inventoryItemId?: string;
+  movedToInventoryDate?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -350,12 +355,22 @@ export const vehicleOrderAPI = {
       method: 'DELETE',
     });
   },
+
+  moveToInventory: async (id: string): Promise<{ message: string; order: VehicleOrder; inventoryItem: InventoryItem }> => {
+    return await apiCall<{ message: string; order: VehicleOrder; inventoryItem: InventoryItem }>(
+      `/vehicle-orders/${id}/move-to-inventory`,
+      {
+        method: 'POST',
+      }
+    );
+  },
 };
 
 // Customer API
 export interface Customer {
   _id?: string;
   name: string;
+  title?: 'Mr.' | 'Mrs.' | 'Ms.' | 'Miss' | 'Dr.';
   contact: string;
   email?: string;
   address?: string;
@@ -420,7 +435,9 @@ export interface InventoryItem {
   brand: string;
   year: number;
   color: string;
-  vin?: string;
+  vin?: string; // Chassis Number
+  chassisNo?: string; // Alternative Chassis Number field
+  engineNo?: string; // Engine Number
   licensePlate?: string;
   fuelType: 'gasoline' | 'diesel' | 'hybrid' | 'electric';
   engineSize?: string;
