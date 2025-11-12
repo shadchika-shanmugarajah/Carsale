@@ -3,29 +3,31 @@
 // For local development, create .env.local file with: REACT_APP_API_URL=http://localhost:5000/api
 // Backend URL: https://carsale-backend-1.onrender.com/api
 // Verified: Backend uses /api prefix (returns 401 for /api/auth/login, 404 for /auth/login)
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://carsale-backend-1.onrender.com/api';
+const API_BASE_URL = "https://carsale-backend-1.onrender.com/api";
 
 // Log the API URL being used (helpful for debugging)
-if (process.env.NODE_ENV === 'development') {
-  console.log('🔗 API Base URL:', API_BASE_URL);
-  console.log('💡 Tip: If you get 404 errors, verify the backend URL is correct');
+if (process.env.NODE_ENV === "development") {
+  console.log("🔗 API Base URL:", API_BASE_URL);
+  console.log(
+    "💡 Tip: If you get 404 errors, verify the backend URL is correct"
+  );
 }
 
 // Helper to get auth token from localStorage
 export const getAuthToken = (): string | null => {
-  return localStorage.getItem('authToken');
+  return localStorage.getItem("authToken");
 };
 
 // Helper to set auth token
 export const setAuthToken = (token: string): void => {
-  localStorage.setItem('authToken', token);
+  localStorage.setItem("authToken", token);
 };
 
 // Helper to remove auth token
 export const removeAuthToken = (): void => {
-  localStorage.removeItem('authToken');
-  localStorage.removeItem('username');
-  localStorage.removeItem('isLoggedIn');
+  localStorage.removeItem("authToken");
+  localStorage.removeItem("username");
+  localStorage.removeItem("isLoggedIn");
 };
 
 // Generic API call function
@@ -34,15 +36,15 @@ async function apiCall<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const token = getAuthToken();
-  
+
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string> || {}),
+    "Content-Type": "application/json",
+    ...((options.headers as Record<string, string>) || {}),
   };
 
   // Add auth token if available
   if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+    headers["Authorization"] = `Bearer ${token}`;
   }
 
   const config: RequestInit = {
@@ -52,58 +54,62 @@ async function apiCall<T>(
 
   try {
     // Construct full URL - ensure no double slashes
-    const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
-    const endpointPath = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const baseUrl = API_BASE_URL.endsWith("/")
+      ? API_BASE_URL.slice(0, -1)
+      : API_BASE_URL;
+    const endpointPath = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
     const url = `${baseUrl}${endpointPath}`;
-    
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`📡 API Call: ${options.method || 'GET'} ${url}`);
+
+    if (process.env.NODE_ENV === "development") {
+      console.log(`📡 API Call: ${options.method || "GET"} ${url}`);
     }
-    
+
     const response = await fetch(url, config);
-    
+
     // Handle non-JSON responses or errors
     if (!response.ok) {
       // Try to get error message from response
       let errorData: any;
-      const contentType = response.headers.get('content-type');
-      
-      if (contentType && contentType.includes('application/json')) {
+      const contentType = response.headers.get("content-type");
+
+      if (contentType && contentType.includes("application/json")) {
         try {
           errorData = await response.json();
         } catch {
           errorData = { message: `HTTP error! status: ${response.status}` };
         }
       } else {
-        const text = await response.text().catch(() => '');
-        errorData = { 
+        const text = await response.text().catch(() => "");
+        errorData = {
           message: text || `HTTP error! status: ${response.status}`,
-          statusText: response.statusText
+          statusText: response.statusText,
         };
       }
-      
-      if (process.env.NODE_ENV === 'development') {
-        console.error('❌ API Error Response:', {
+
+      if (process.env.NODE_ENV === "development") {
+        console.error("❌ API Error Response:", {
           status: response.status,
           statusText: response.statusText,
           endpoint,
           url,
-          errorData
+          errorData,
         });
       }
-      
+
       // Create error with helpful message for 404
-      let errorMessage = errorData.message || errorData.error || 'API request failed';
-      
+      let errorMessage =
+        errorData.message || errorData.error || "API request failed";
+
       if (response.status === 404) {
-        errorMessage = `Endpoint not found (404). Please check:\n` +
+        errorMessage =
+          `Endpoint not found (404). Please check:\n` +
           `1. Backend URL: ${baseUrl}\n` +
           `2. Endpoint: ${endpoint}\n` +
           `3. Full URL: ${url}\n` +
           `4. Verify backend is running and accessible\n` +
           `5. Check if backend uses /api prefix or not`;
       }
-      
+
       const error: any = new Error(errorMessage);
       error.status = response.status;
       error.data = errorData;
@@ -114,21 +120,23 @@ async function apiCall<T>(
     }
 
     const data = await response.json();
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === "development") {
       console.log(`✅ API Success: ${endpoint}`, data);
     }
     return data;
   } catch (error: any) {
     // Enhanced error logging
-    if (error.name === 'TypeError' && error.message.includes('fetch')) {
-      const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
-      const endpointPath = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    if (error.name === "TypeError" && error.message.includes("fetch")) {
+      const baseUrl = API_BASE_URL.endsWith("/")
+        ? API_BASE_URL.slice(0, -1)
+        : API_BASE_URL;
+      const endpointPath = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
       const url = `${baseUrl}${endpointPath}`;
-      
-      console.error('🌐 Network Error - Unable to connect to backend:', {
+
+      console.error("🌐 Network Error - Unable to connect to backend:", {
         url,
         error: error.message,
-        suggestion: 'Check if backend is running and accessible'
+        suggestion: "Check if backend is running and accessible",
       });
       const networkError: any = new Error(
         `Unable to connect to backend server at ${baseUrl}. Please check if the backend is running.`
@@ -137,18 +145,20 @@ async function apiCall<T>(
       networkError.url = url;
       throw networkError;
     }
-    
+
     // If error was already processed (has status property), re-throw it
     if (error.status) {
       throw error;
     }
-    
+
     // Handle other unexpected errors
-    const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
-    const endpointPath = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const baseUrl = API_BASE_URL.endsWith("/")
+      ? API_BASE_URL.slice(0, -1)
+      : API_BASE_URL;
+    const endpointPath = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
     const url = `${baseUrl}${endpointPath}`;
-    
-    console.error('❌ API call error:', {
+
+    console.error("❌ API call error:", {
       endpoint,
       url,
       error: error.message || error,
@@ -160,33 +170,33 @@ async function apiCall<T>(
 // Auth API
 export const authAPI = {
   login: async (username: string, password: string) => {
-    const response = await apiCall<{ token: string; user: { id: string; username: string } }>(
-      '/auth/login',
-      {
-        method: 'POST',
-        body: JSON.stringify({ username, password }),
-      }
-    );
-    
+    const response = await apiCall<{
+      token: string;
+      user: { id: string; username: string };
+    }>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username, password }),
+    });
+
     // Save token and user info
     if (response.token) {
       setAuthToken(response.token);
-      localStorage.setItem('username', response.user.username);
-      localStorage.setItem('userId', response.user.id);
-      localStorage.setItem('isLoggedIn', 'true');
+      localStorage.setItem("username", response.user.username);
+      localStorage.setItem("userId", response.user.id);
+      localStorage.setItem("isLoggedIn", "true");
     }
-    
+
     return response;
   },
 
   register: async (username: string, password: string) => {
-    return await apiCall<{ message: string; user: { id: string; username: string } }>(
-      '/auth/register',
-      {
-        method: 'POST',
-        body: JSON.stringify({ username, password }),
-      }
-    );
+    return await apiCall<{
+      message: string;
+      user: { id: string; username: string };
+    }>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ username, password }),
+    });
   },
 
   logout: () => {
@@ -194,21 +204,23 @@ export const authAPI = {
   },
 
   changePassword: async (currentPassword: string, newPassword: string) => {
-    return await apiCall<{ message: string }>('/auth/change-password', {
-      method: 'POST',
+    return await apiCall<{ message: string }>("/auth/change-password", {
+      method: "POST",
       body: JSON.stringify({ currentPassword, newPassword }),
     });
   },
 
   adminResetPassword: async (userId: string, newPassword: string) => {
-    return await apiCall<{ message: string }>('/auth/admin/reset-password', {
-      method: 'POST',
+    return await apiCall<{ message: string }>("/auth/admin/reset-password", {
+      method: "POST",
       body: JSON.stringify({ userId, newPassword }),
     });
   },
 
   getAllUsers: async () => {
-    return await apiCall<{ users: Array<{ _id: string; username: string; role: string }> }>('/auth/users');
+    return await apiCall<{
+      users: Array<{ _id: string; username: string; role: string }>;
+    }>("/auth/users");
   },
 };
 
@@ -219,7 +231,7 @@ export interface Expense {
   description: string;
   amount: number;
   date: string;
-  currency: 'USD' | 'LKR' | 'EUR' | 'JPY' | string;
+  currency: "USD" | "LKR" | "EUR" | "JPY" | string;
   paymentMethod?: string;
   notes?: string;
   createdBy?: any;
@@ -243,15 +255,15 @@ export const expenseAPI = {
     endDate?: string;
   }): Promise<ExpenseListResponse> => {
     const queryParams = new URLSearchParams();
-    if (params?.page) queryParams.append('page', params.page.toString());
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
-    if (params?.category) queryParams.append('category', params.category);
-    if (params?.startDate) queryParams.append('startDate', params.startDate);
-    if (params?.endDate) queryParams.append('endDate', params.endDate);
+    if (params?.page) queryParams.append("page", params.page.toString());
+    if (params?.limit) queryParams.append("limit", params.limit.toString());
+    if (params?.category) queryParams.append("category", params.category);
+    if (params?.startDate) queryParams.append("startDate", params.startDate);
+    if (params?.endDate) queryParams.append("endDate", params.endDate);
 
     const queryString = queryParams.toString();
     return await apiCall<ExpenseListResponse>(
-      `/expenses${queryString ? `?${queryString}` : ''}`
+      `/expenses${queryString ? `?${queryString}` : ""}`
     );
   },
 
@@ -259,23 +271,31 @@ export const expenseAPI = {
     return await apiCall<{ expense: Expense }>(`/expenses/${id}`);
   },
 
-  create: async (expense: Omit<Expense, '_id'>): Promise<{ message: string; expense: Expense }> => {
-    return await apiCall<{ message: string; expense: Expense }>('/expenses', {
-      method: 'POST',
+  create: async (
+    expense: Omit<Expense, "_id">
+  ): Promise<{ message: string; expense: Expense }> => {
+    return await apiCall<{ message: string; expense: Expense }>("/expenses", {
+      method: "POST",
       body: JSON.stringify(expense),
     });
   },
 
-  update: async (id: string, expense: Partial<Expense>): Promise<{ message: string; expense: Expense }> => {
-    return await apiCall<{ message: string; expense: Expense }>(`/expenses/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(expense),
-    });
+  update: async (
+    id: string,
+    expense: Partial<Expense>
+  ): Promise<{ message: string; expense: Expense }> => {
+    return await apiCall<{ message: string; expense: Expense }>(
+      `/expenses/${id}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(expense),
+      }
+    );
   },
 
   delete: async (id: string): Promise<{ message: string }> => {
     return await apiCall<{ message: string }>(`/expenses/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   },
 
@@ -296,12 +316,12 @@ export const expenseAPI = {
     }>;
   }> => {
     const queryParams = new URLSearchParams();
-    if (params?.startDate) queryParams.append('startDate', params.startDate);
-    if (params?.endDate) queryParams.append('endDate', params.endDate);
+    if (params?.startDate) queryParams.append("startDate", params.startDate);
+    if (params?.endDate) queryParams.append("endDate", params.endDate);
 
     const queryString = queryParams.toString();
     return await apiCall(
-      `/expenses/stats/summary${queryString ? `?${queryString}` : ''}`
+      `/expenses/stats/summary${queryString ? `?${queryString}` : ""}`
     );
   },
 };
@@ -330,7 +350,13 @@ export interface VehicleOrder {
   };
   advancePayment: number;
   balanceAmount: number;
-  orderStatus: 'pending' | 'confirmed' | 'in_transit' | 'arrived' | 'delivered' | 'cancelled';
+  orderStatus:
+    | "pending"
+    | "confirmed"
+    | "in_transit"
+    | "arrived"
+    | "delivered"
+    | "cancelled";
   expectedArrivalDate?: string;
   actualArrivalDate?: string;
   deliveryDate?: string;
@@ -360,17 +386,17 @@ export const vehicleOrderAPI = {
     page?: number;
     limit?: number;
     status?: string;
-    orderType?: 'customer' | 'import'; // Filter by order type
+    orderType?: "customer" | "import"; // Filter by order type
   }): Promise<VehicleOrderListResponse> => {
     const queryParams = new URLSearchParams();
-    if (params?.page) queryParams.append('page', params.page.toString());
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
-    if (params?.status) queryParams.append('status', params.status);
-    if (params?.orderType) queryParams.append('orderType', params.orderType);
+    if (params?.page) queryParams.append("page", params.page.toString());
+    if (params?.limit) queryParams.append("limit", params.limit.toString());
+    if (params?.status) queryParams.append("status", params.status);
+    if (params?.orderType) queryParams.append("orderType", params.orderType);
 
     const queryString = queryParams.toString();
     return await apiCall<VehicleOrderListResponse>(
-      `/vehicle-orders${queryString ? `?${queryString}` : ''}`
+      `/vehicle-orders${queryString ? `?${queryString}` : ""}`
     );
   },
 
@@ -378,33 +404,51 @@ export const vehicleOrderAPI = {
     return await apiCall<{ order: VehicleOrder }>(`/vehicle-orders/${id}`);
   },
 
-  create: async (order: Omit<VehicleOrder, '_id'>): Promise<{ message: string; order: VehicleOrder }> => {
-    return await apiCall<{ message: string; order: VehicleOrder }>('/vehicle-orders', {
-      method: 'POST',
-      body: JSON.stringify(order),
-    });
+  create: async (
+    order: Omit<VehicleOrder, "_id">
+  ): Promise<{ message: string; order: VehicleOrder }> => {
+    return await apiCall<{ message: string; order: VehicleOrder }>(
+      "/vehicle-orders",
+      {
+        method: "POST",
+        body: JSON.stringify(order),
+      }
+    );
   },
 
-  update: async (id: string, order: Partial<VehicleOrder>): Promise<{ message: string; order: VehicleOrder }> => {
-    return await apiCall<{ message: string; order: VehicleOrder }>(`/vehicle-orders/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(order),
-    });
+  update: async (
+    id: string,
+    order: Partial<VehicleOrder>
+  ): Promise<{ message: string; order: VehicleOrder }> => {
+    return await apiCall<{ message: string; order: VehicleOrder }>(
+      `/vehicle-orders/${id}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(order),
+      }
+    );
   },
 
   delete: async (id: string): Promise<{ message: string }> => {
     return await apiCall<{ message: string }>(`/vehicle-orders/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   },
 
-  moveToInventory: async (id: string): Promise<{ message: string; order: VehicleOrder; inventoryItem: InventoryItem }> => {
-    return await apiCall<{ message: string; order: VehicleOrder; inventoryItem: InventoryItem }>(
-      `/vehicle-orders/${id}/move-to-inventory`,
-      {
-        method: 'POST',
-      }
-    );
+  moveToInventory: async (
+    id: string
+  ): Promise<{
+    message: string;
+    order: VehicleOrder;
+    inventoryItem: InventoryItem;
+  }> => {
+    return await apiCall<{
+      message: string;
+      order: VehicleOrder;
+      inventoryItem: InventoryItem;
+    }>(`/vehicle-orders/${id}/move-to-inventory`, {
+      method: "POST",
+    });
   },
 };
 
@@ -412,7 +456,7 @@ export const vehicleOrderAPI = {
 export interface Customer {
   _id?: string;
   name: string;
-  title?: 'Mr.' | 'Mrs.' | 'Ms.' | 'Miss' | 'Dr.';
+  title?: "Mr." | "Mrs." | "Ms." | "Miss" | "Dr.";
   contact: string;
   email?: string;
   address?: string;
@@ -435,13 +479,13 @@ export const customerAPI = {
     search?: string;
   }): Promise<CustomerListResponse> => {
     const queryParams = new URLSearchParams();
-    if (params?.page) queryParams.append('page', params.page.toString());
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
-    if (params?.search) queryParams.append('search', params.search);
+    if (params?.page) queryParams.append("page", params.page.toString());
+    if (params?.limit) queryParams.append("limit", params.limit.toString());
+    if (params?.search) queryParams.append("search", params.search);
 
     const queryString = queryParams.toString();
     return await apiCall<CustomerListResponse>(
-      `/customers${queryString ? `?${queryString}` : ''}`
+      `/customers${queryString ? `?${queryString}` : ""}`
     );
   },
 
@@ -449,23 +493,34 @@ export const customerAPI = {
     return await apiCall<{ customer: Customer }>(`/customers/${id}`);
   },
 
-  create: async (customer: Omit<Customer, '_id'>): Promise<{ message: string; customer: Customer }> => {
-    return await apiCall<{ message: string; customer: Customer }>('/customers', {
-      method: 'POST',
-      body: JSON.stringify(customer),
-    });
+  create: async (
+    customer: Omit<Customer, "_id">
+  ): Promise<{ message: string; customer: Customer }> => {
+    return await apiCall<{ message: string; customer: Customer }>(
+      "/customers",
+      {
+        method: "POST",
+        body: JSON.stringify(customer),
+      }
+    );
   },
 
-  update: async (id: string, customer: Partial<Customer>): Promise<{ message: string; customer: Customer }> => {
-    return await apiCall<{ message: string; customer: Customer }>(`/customers/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(customer),
-    });
+  update: async (
+    id: string,
+    customer: Partial<Customer>
+  ): Promise<{ message: string; customer: Customer }> => {
+    return await apiCall<{ message: string; customer: Customer }>(
+      `/customers/${id}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(customer),
+      }
+    );
   },
 
   delete: async (id: string): Promise<{ message: string }> => {
     return await apiCall<{ message: string }>(`/customers/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   },
 };
@@ -481,14 +536,14 @@ export interface InventoryItem {
   chassisNo?: string; // Alternative Chassis Number field
   engineNo?: string; // Engine Number
   licensePlate?: string;
-  fuelType: 'gasoline' | 'diesel' | 'hybrid' | 'electric';
+  fuelType: "gasoline" | "diesel" | "hybrid" | "electric";
   engineSize?: string;
   transmission?: string;
   mileage?: number;
   purchasePrice: number;
   sellingPrice?: number;
   currency: string;
-  status: 'available' | 'reserved' | 'sold';
+  status: "available" | "reserved" | "sold";
   location?: string;
   notes?: string;
   images?: string[];
@@ -511,14 +566,14 @@ export const inventoryAPI = {
     brand?: string;
   }): Promise<InventoryListResponse> => {
     const queryParams = new URLSearchParams();
-    if (params?.page) queryParams.append('page', params.page.toString());
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
-    if (params?.status) queryParams.append('status', params.status);
-    if (params?.brand) queryParams.append('brand', params.brand);
+    if (params?.page) queryParams.append("page", params.page.toString());
+    if (params?.limit) queryParams.append("limit", params.limit.toString());
+    if (params?.status) queryParams.append("status", params.status);
+    if (params?.brand) queryParams.append("brand", params.brand);
 
     const queryString = queryParams.toString();
     return await apiCall<InventoryListResponse>(
-      `/inventory${queryString ? `?${queryString}` : ''}`
+      `/inventory${queryString ? `?${queryString}` : ""}`
     );
   },
 
@@ -526,23 +581,34 @@ export const inventoryAPI = {
     return await apiCall<{ item: InventoryItem }>(`/inventory/${id}`);
   },
 
-  create: async (item: Omit<InventoryItem, '_id'>): Promise<{ message: string; item: InventoryItem }> => {
-    return await apiCall<{ message: string; item: InventoryItem }>('/inventory', {
-      method: 'POST',
-      body: JSON.stringify(item),
-    });
+  create: async (
+    item: Omit<InventoryItem, "_id">
+  ): Promise<{ message: string; item: InventoryItem }> => {
+    return await apiCall<{ message: string; item: InventoryItem }>(
+      "/inventory",
+      {
+        method: "POST",
+        body: JSON.stringify(item),
+      }
+    );
   },
 
-  update: async (id: string, item: Partial<InventoryItem>): Promise<{ message: string; item: InventoryItem }> => {
-    return await apiCall<{ message: string; item: InventoryItem }>(`/inventory/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(item),
-    });
+  update: async (
+    id: string,
+    item: Partial<InventoryItem>
+  ): Promise<{ message: string; item: InventoryItem }> => {
+    return await apiCall<{ message: string; item: InventoryItem }>(
+      `/inventory/${id}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(item),
+      }
+    );
   },
 
   delete: async (id: string): Promise<{ message: string }> => {
     return await apiCall<{ message: string }>(`/inventory/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   },
 };
@@ -552,8 +618,14 @@ export interface Transaction {
   _id?: string;
   customerId: string;
   vehicleId?: string;
-  type: 'reservation' | 'sale' | 'leasing' | 'refund';
-  status: 'pending' | 'partial_paid' | 'fully_paid' | 'completed' | 'overdue' | 'cancelled';
+  type: "reservation" | "sale" | "leasing" | "refund";
+  status:
+    | "pending"
+    | "partial_paid"
+    | "fully_paid"
+    | "completed"
+    | "overdue"
+    | "cancelled";
   invoiceNumber?: string;
   reservationDate?: string;
   completionDate?: string;
@@ -582,7 +654,7 @@ export interface Transaction {
     reference?: string;
   }[];
   notes?: string;
-  paymentMode?: 'cash' | 'bank_transfer' | 'leasing';
+  paymentMode?: "cash" | "bank_transfer" | "leasing";
   isLeasing?: boolean;
   leasingDetails?: {
     leasingCompanyId: string;
@@ -616,14 +688,14 @@ export const transactionAPI = {
     type?: string;
   }): Promise<TransactionListResponse> => {
     const queryParams = new URLSearchParams();
-    if (params?.page) queryParams.append('page', params.page.toString());
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
-    if (params?.status) queryParams.append('status', params.status);
-    if (params?.type) queryParams.append('type', params.type);
+    if (params?.page) queryParams.append("page", params.page.toString());
+    if (params?.limit) queryParams.append("limit", params.limit.toString());
+    if (params?.status) queryParams.append("status", params.status);
+    if (params?.type) queryParams.append("type", params.type);
 
     const queryString = queryParams.toString();
     return await apiCall<TransactionListResponse>(
-      `/transactions${queryString ? `?${queryString}` : ''}`
+      `/transactions${queryString ? `?${queryString}` : ""}`
     );
   },
 
@@ -631,23 +703,34 @@ export const transactionAPI = {
     return await apiCall<{ transaction: Transaction }>(`/transactions/${id}`);
   },
 
-  create: async (transaction: Omit<Transaction, '_id'>): Promise<{ message: string; transaction: Transaction }> => {
-    return await apiCall<{ message: string; transaction: Transaction }>('/transactions', {
-      method: 'POST',
-      body: JSON.stringify(transaction),
-    });
+  create: async (
+    transaction: Omit<Transaction, "_id">
+  ): Promise<{ message: string; transaction: Transaction }> => {
+    return await apiCall<{ message: string; transaction: Transaction }>(
+      "/transactions",
+      {
+        method: "POST",
+        body: JSON.stringify(transaction),
+      }
+    );
   },
 
-  update: async (id: string, transaction: Partial<Transaction>): Promise<{ message: string; transaction: Transaction }> => {
-    return await apiCall<{ message: string; transaction: Transaction }>(`/transactions/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(transaction),
-    });
+  update: async (
+    id: string,
+    transaction: Partial<Transaction>
+  ): Promise<{ message: string; transaction: Transaction }> => {
+    return await apiCall<{ message: string; transaction: Transaction }>(
+      `/transactions/${id}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(transaction),
+      }
+    );
   },
 
   delete: async (id: string): Promise<{ message: string }> => {
     return await apiCall<{ message: string }>(`/transactions/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   },
 };
@@ -660,4 +743,3 @@ export default {
   inventory: inventoryAPI,
   transactions: transactionAPI,
 };
-
